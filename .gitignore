@@ -15,3 +15,8 @@ appsettings.Development.json
 # Docker local data, if ever created inside project
 postgres_data/
 pgdata/
+
+# React / Vite
+clients/**/node_modules/
+clients/**/dist/
+clients/**/.env
