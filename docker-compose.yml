@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: civio-system-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: civio_system
+      POSTGRES_USER: civio_user
+      POSTGRES_PASSWORD: civio_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - civio_postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  civio_postgres_data:

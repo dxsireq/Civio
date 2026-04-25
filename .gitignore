@@ -1,0 +1,17 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+.vs/
+
+# .NET later
+bin/
+obj/
+
+# Environment files
+.env
+appsettings.Development.json
+
+# Docker local data, if ever created inside project
+postgres_data/
+pgdata/
