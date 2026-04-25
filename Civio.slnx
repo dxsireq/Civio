@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Civio.Api/Civio.Api.csproj" />
+    <Project Path="src/Civio.Application/Civio.Application.csproj" />
+    <Project Path="src/Civio.Contracts/Civio.Contracts.csproj" />
+    <Project Path="src/Civio.Domain/Civio.Domain.csproj" />
+    <Project Path="src/Civio.Infrastructure/Civio.Infrastructure.csproj" />
+  </Folder>
+</Solution>
