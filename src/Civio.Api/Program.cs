@@ -8,6 +8,9 @@ using Civio.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Civio.Api.Endpoints;
+using Civio.Infrastructure;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +72,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
@@ -137,11 +141,8 @@ authGroup.MapGet("/me", async (
 })
 .RequireAuthorization();
 
+app.MapOrganizationEndpoints();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
