@@ -1,5 +1,13 @@
 using Civio.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+using System.Text;
+using Civio.Application.Auth;
+using Civio.Contracts.Auth;
+using Civio.Infrastructure.Auth;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,12 +15,60 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    const string securitySchemeName = "bearer";
+
+    options.AddSecurityDefinition(securitySchemeName, new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT Authorization header using the Bearer scheme."
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference(securitySchemeName, document)] = []
+    });
+});
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+builder.Services.Configure<JwtOptions>(
+    builder.Configuration.GetSection("Jwt"));
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+var jwtOptions = builder.Configuration
+    .GetSection("Jwt")
+    .Get<JwtOptions>()!;
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.Secret)),
+
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -24,24 +80,10 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 app.MapGet("/health/db", async (AppDbContext db) =>
 {
@@ -58,6 +100,42 @@ app.MapGet("/health/db", async (AppDbContext db) =>
         roles
     });
 });
+
+var authGroup = app.MapGroup("/api/auth")
+    .WithTags("Auth");
+
+authGroup.MapPost("/register", async (
+    RegisterRequest request,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var response = await authService.RegisterAsync(request, cancellationToken);
+    return Results.Ok(response);
+});
+
+authGroup.MapPost("/login", async (
+    LoginRequest request,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var response = await authService.LoginAsync(request, cancellationToken);
+    return Results.Ok(response);
+});
+
+authGroup.MapGet("/me", async (
+    ClaimsPrincipal user,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var userIdRaw = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!Guid.TryParse(userIdRaw, out var userId))
+        return Results.Unauthorized();
+
+    var response = await authService.GetCurrentUserAsync(userId, cancellationToken);
+    return Results.Ok(response);
+})
+.RequireAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI();
