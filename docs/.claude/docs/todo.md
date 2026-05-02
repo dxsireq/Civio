@@ -1,13 +1,8 @@
 # Civio — TODO
 
-## Как работать с TODO файлом:
-- выполнил задачу -> перенёс в ## Готово
-
----
-
 ## QR-коды
 
-- [ ] `GET /api/bookings/{id}/qr` — QR (PNG или токен), только владелец
+- [ ] `GET /api/bookings/{id}/qr` — QR (токен), только владелец
 - [ ] `POST /api/bookings/scan` — валидация при сканировании
   - найти по token
   - проверить expires_at > UtcNow
@@ -21,7 +16,7 @@
 
 - [ ] Запись в `notifications` при каждой смене статуса
 - [ ] `GET /api/notifications/my` — уведомления юзера
-- [ ] email/push — опционально
+- [ ] email уведомления
 
 ---
 
@@ -34,14 +29,7 @@
 
 ---
 
-## Branches (филиалы, низкий приоритет)
-
-- [ ] `POST /api/organizations/{id}/branches` — создать филиал
-- [ ] `GET /api/organizations/{id}/branches` — список филиалов
-
----
-
-## Postman / Демо
+## Демо
 
 - [ ] Postman collection, end-to-end сценарий:
   1. Регистрация owner
