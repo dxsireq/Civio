@@ -5,25 +5,6 @@
 
 ---
 
-## Bookings (бронирования)
-
-- [x] `POST /api/bookings` — создать (organizationId, serviceId, employeeId, startAt)
-  - проверить слот
-  - `SELECT FOR UPDATE` на work_days строку
-  - booking статус `created`
-  - создать booking_slot
-  - booking_qr_code (JWT: bookingId + userId + expiresAt)
-- [x] `GET /api/bookings/my` — бронирования юзера (citizen)
-- [x] `GET /api/bookings/{id}` — детали, доступ: citizen-владелец или employee
-- [x] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, → booking_status_history
-- [x] `GET /api/organizations/{id}/bookings` — бронирования организации, owner/employee
-- [x] `POST /api/bookings/{id}/confirm` — подтвердить, статус → `confirmed`
-- [x] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
-- [x] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
-- [x] Все смены статуса → `booking_status_history`
-
----
-
 ## QR-коды
 
 - [ ] `GET /api/bookings/{id}/qr` — QR (PNG или токен), только владелец
@@ -114,3 +95,17 @@
   - минус bookings
   - окна кратные `service.duration_minutes`
 - [x] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД
+- [x] `POST /api/bookings` — создать (organizationId, serviceId, employeeId, startAt)
+  - проверить слот
+  - `SELECT FOR UPDATE` на work_days строку
+  - booking статус `created`
+  - создать booking_slot
+  - booking_qr_code (JWT: bookingId + userId + expiresAt)
+- [x] `GET /api/bookings/my` — бронирования юзера (citizen)
+- [x] `GET /api/bookings/{id}` — детали, доступ: citizen-владелец или employee
+- [x] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, → booking_status_history
+- [x] `GET /api/organizations/{id}/bookings` — бронирования организации, owner/employee
+- [x] `POST /api/bookings/{id}/confirm` — подтвердить, статус → `confirmed`
+- [x] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
+- [x] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
+- [x] Все смены статуса → `booking_status_history`
