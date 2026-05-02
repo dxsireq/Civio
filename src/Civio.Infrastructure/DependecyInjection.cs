@@ -1,8 +1,10 @@
 using Civio.Application.Employees;
 using Civio.Application.Organizations;
+using Civio.Application.Services;
 using Civio.Infrastructure.Employees;
 using Civio.Infrastructure.Organizations;
 using Civio.Infrastructure.Persistence;
+using Civio.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,7 @@ public static class DependencyInjection
 
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IServiceService, ServiceService>();
 
         return services;
     }

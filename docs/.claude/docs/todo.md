@@ -11,10 +11,10 @@ _(сюда переносить задачу когда начал)_
 
 ## Services (услуги)
 
-- [ ] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
-- [ ] `GET /api/organizations/{id}/services` — список услуг, публично
-- [ ] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать, только owner
-- [ ] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать (`is_active = false`), только owner
+- [x] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
+- [x] `GET /api/organizations/{id}/services` — список услуг, публично
+- [x] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать, только owner
+- [x] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать (`is_active = false`), только owner
 
 ---
 
