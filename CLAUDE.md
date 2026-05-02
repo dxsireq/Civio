@@ -1,6 +1,6 @@
 # Civio
 
-Backend-платформа для управления организациями и записью на услуги.
+Backend-платформа: управление организациями, запись на услуги.
 
 ## Стек
 
@@ -47,3 +47,10 @@ Swagger: `https://localhost:{port}/swagger`
 - `Entity` — **никогда** не возвращать из endpoints, только `Contracts`
 - Время — только `DateTimeOffset.UtcNow`, БД — `TIMESTAMPTZ`
 - Чтение — всегда `AsNoTracking()`
+
+## Правила для Claude Code
+
+- Не запускать `dotnet run`, `dotnet watch`, `docker compose up`, любые long-running процессы
+- Не запускать миграции, не менять схему БД
+- Сборка для проверки: `dotnet build` — допустима
+- Запуск окружения — спрашивать

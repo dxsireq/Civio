@@ -10,13 +10,13 @@ Api → Application ← Infrastructure
   Contracts (DTO)
 ```
 
-**Правило зависимостей:** стрелки смотрят внутрь. `Infrastructure` реализует интерфейсы `Application`. `Api` знает только про `Application`.
+**Правило зависимостей:** стрелки внутрь. `Infrastructure` реализует интерфейсы `Application`. `Api` знает только `Application`.
 
 ---
 
 ## Слой Api (`Civio.Api`)
 
-Только orchestration. Никакой бизнес-логики.
+Только orchestration. Бизнес-логики нет.
 
 ```csharp
 // ✅ Правильно
@@ -80,7 +80,7 @@ public static IServiceCollection AddInfrastructure(
 
 ## Contracts (`Civio.Contracts`)
 
-Только DTO. Никаких зависимостей от Domain или Infrastructure.
+Только DTO. Зависимостей от Domain или Infrastructure нет.
 
 ```csharp
 // ✅ Правильно
@@ -108,13 +108,13 @@ _db.Organizations.Add(org);
 await _db.SaveChangesAsync();
 ```
 
-Lazy loading отключён. Связи загружать явно через `.Include()`.
+Lazy loading отключён. Связи грузить явно через `.Include()`.
 
 ---
 
 ## Модель доступа
 
-Owner и Employee определяются без отдельных таблиц ролей:
+Owner и Employee без отдельных таблиц ролей:
 
 ```csharp
 // Owner — через organizations.owner_user_id
@@ -126,7 +126,7 @@ bool isEmployee = await _db.Employees
     .AnyAsync(e => e.UserId == currentUserId && e.OrganizationId == orgId);
 ```
 
-Подробная матрица прав — в `project-context.md`.
+Матрица прав — в `project-context.md`.
 
 ---
 
@@ -158,7 +158,7 @@ var now = DateTime.UtcNow;
 
 ## Nullable
 
-Nullable только там, где поле реально может отсутствовать в домене:
+Nullable только если поле реально может отсутствовать:
 
 ```csharp
 // ❌ Если поле обязательно

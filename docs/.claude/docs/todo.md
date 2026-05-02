@@ -1,7 +1,6 @@
 # Civio — TODO
 
-> Приоритет: сверху вниз внутри каждой секции.
-> Claude Code: при завершении задачи — перемещай в `## Готово`, не удаляй.
+> Приоритет: сверху вниз. Завершил — перемести в `## Готово`, не удаляй.
 
 ---
 
@@ -12,25 +11,25 @@ _(сюда переносить задачу когда начал)_
 
 ## Инфраструктура (сделать до всего остального)
 
-- [ ] Error handling middleware — глобальный обработчик исключений, возврат `{ error, statusCode }`
+- [ ] Error handling middleware — глобальный обработчик, возврат `{ error, statusCode }`
 - [ ] Валидация моделей — DataAnnotations на всех Contracts + `AddProblemDetails()`
-- [ ] Seed data — `database/test-data.sql` с пользователями, организацией, сотрудником, услугой, рабочим днём
+- [ ] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
 
 ---
 
 ## Organizations
 
-- [ ] `GET /api/organizations/my` — список организаций текущего пользователя (owner_user_id из JWT, AsNoTracking)
-- [ ] `GET /api/organizations/{id}` — получение по id, доступ: owner или employee, 403 если нет доступа
-- [ ] `PUT /api/organizations/{id}` — редактирование, только owner
-- [ ] Проверка доступа через `OrganizationAccess.IsOwner` / `IsEmployee` на всех endpoints
+- [ ] `GET /api/organizations/my` — список организаций юзера (owner_user_id из JWT, AsNoTracking)
+- [ ] `GET /api/organizations/{id}` — по id, доступ: owner/employee, 403 иначе
+- [ ] `PUT /api/organizations/{id}` — редактировать, только owner
+- [ ] Доступ через `OrganizationAccess.IsOwner` / `IsEmployee` везде
 
 ---
 
 ## Employees
 
-- [ ] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` обязателен (существующий пользователь)
-- [ ] `GET /api/organizations/{id}/employees` — список сотрудников, доступ: owner
+- [ ] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` обязателен (существующий юзер)
+- [ ] `GET /api/organizations/{id}/employees` — список сотрудников, только owner
 - [ ] `DELETE /api/organizations/{id}/employees/{employeeId}` — удалить сотрудника, только owner
 
 ---
@@ -38,75 +37,75 @@ _(сюда переносить задачу когда начал)_
 ## Services (услуги)
 
 - [ ] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
-- [ ] `GET /api/organizations/{id}/services` — список услуг организации, публичный доступ
-- [ ] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать услугу, только owner
-- [ ] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать услугу (`is_active = false`), только owner
+- [ ] `GET /api/organizations/{id}/services` — список услуг, публично
+- [ ] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать, только owner
+- [ ] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать (`is_active = false`), только owner
 
 ---
 
 ## Schedule (расписание)
 
-- [ ] `POST /api/employees/{id}/work-days` — создать рабочий день (work_date, start_time, end_time, break_start?, break_end?), owner или сам сотрудник
-- [ ] `GET /api/employees/{id}/work-days` — список рабочих дней сотрудника
-- [ ] `PUT /api/employees/{id}/work-days/{workDayId}` — редактировать рабочий день
-- [ ] `DELETE /api/employees/{id}/work-days/{workDayId}` — удалить рабочий день (каскадно удаляет booking_slots)
-- [ ] `POST /api/employees/{id}/schedule-templates` — создать шаблон расписания по дням недели (опционально, упрощает заполнение work_days)
+- [ ] `POST /api/employees/{id}/work-days` — создать рабочий день (work_date, start_time, end_time, break_start?, break_end?), owner или сотрудник
+- [ ] `GET /api/employees/{id}/work-days` — рабочие дни сотрудника
+- [ ] `PUT /api/employees/{id}/work-days/{workDayId}` — редактировать
+- [ ] `DELETE /api/employees/{id}/work-days/{workDayId}` — удалить (каскад: booking_slots)
+- [ ] `POST /api/employees/{id}/schedule-templates` — шаблон по дням недели (опционально, упрощает work_days)
 
 ---
 
 ## Slots (доступное время)
 
-- [ ] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — вычислить доступные слоты на дату
-  - взять work_days сотрудников умеющих оказывать услугу
-  - вычесть существующие bookings
-  - вернуть окна кратные `service.duration_minutes`
-- [ ] Реализовать `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика без БД
+- [ ] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — доступные слоты на дату
+  - work_days сотрудников с нужной услугой
+  - минус bookings
+  - окна кратные `service.duration_minutes`
+- [ ] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД
 
 ---
 
 ## Bookings (бронирования)
 
-- [ ] `POST /api/bookings` — создать бронирование (organizationId, serviceId, employeeId, startAt)
-  - проверить доступность слота
+- [ ] `POST /api/bookings` — создать (organizationId, serviceId, employeeId, startAt)
+  - проверить слот
   - `SELECT FOR UPDATE` на work_days строку
-  - создать booking со статусом `created`
+  - booking статус `created`
   - создать booking_slot
-  - создать booking_qr_code (токен = подписанный JWT: bookingId + userId + expiresAt)
-- [ ] `GET /api/bookings/my` — список бронирований текущего пользователя (citizen)
-- [ ] `GET /api/bookings/{id}` — детали бронирования, доступ: citizen-владелец или сотрудник организации
-- [ ] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, запись в booking_status_history
-- [ ] `GET /api/organizations/{id}/bookings` — список бронирований организации, доступ: owner или employee
-- [ ] `POST /api/bookings/{id}/confirm` — подтверждение сотрудником, статус → `confirmed`
-- [ ] `POST /api/bookings/{id}/reject` — отклонение сотрудником, статус → `rejected`
-- [ ] `POST /api/bookings/{id}/complete` — завершение сотрудником, статус → `completed`
-- [ ] Все смены статуса пишут запись в `booking_status_history`
+  - booking_qr_code (JWT: bookingId + userId + expiresAt)
+- [ ] `GET /api/bookings/my` — бронирования юзера (citizen)
+- [ ] `GET /api/bookings/{id}` — детали, доступ: citizen-владелец или employee
+- [ ] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, → booking_status_history
+- [ ] `GET /api/organizations/{id}/bookings` — бронирования организации, owner/employee
+- [ ] `POST /api/bookings/{id}/confirm` — подтвердить, статус → `confirmed`
+- [ ] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
+- [ ] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
+- [ ] Все смены статуса → `booking_status_history`
 
 ---
 
 ## QR-коды
 
-- [ ] `GET /api/bookings/{id}/qr` — вернуть QR-код (PNG или строку токена) для бронирования, доступ: только владелец бронирования
-- [ ] `POST /api/bookings/scan` — валидация QR при сканировании сотрудником
+- [ ] `GET /api/bookings/{id}/qr` — QR (PNG или токен), только владелец
+- [ ] `POST /api/bookings/scan` — валидация при сканировании
   - найти по token
   - проверить expires_at > UtcNow
   - проверить booking.status = `confirmed`
   - записать used_at
-  - вернуть данные бронирования
+  - вернуть данные
 
 ---
 
 ## Notifications (минимум для диплома)
 
-- [ ] Создавать запись в таблице `notifications` при каждой смене статуса бронирования
-- [ ] `GET /api/notifications/my` — список уведомлений текущего пользователя
-- [ ] Реальная отправка (email/push) — опционально, можно показать таблицу с данными
+- [ ] Запись в `notifications` при каждой смене статуса
+- [ ] `GET /api/notifications/my` — уведомления юзера
+- [ ] email/push — опционально
 
 ---
 
 ## Moderation (Admin)
 
-- [ ] `GET /api/admin/organizations` — список всех организаций, только PlatformAdmin
-- [ ] `POST /api/admin/organizations/{id}/approve` — статус → `approved`, запись в `organization_moderation_history`
+- [ ] `GET /api/admin/organizations` — все организации, только PlatformAdmin
+- [ ] `POST /api/admin/organizations/{id}/approve` — статус → `approved`, → `organization_moderation_history`
 - [ ] `POST /api/admin/organizations/{id}/reject` — статус → `rejected`
 - [ ] `POST /api/admin/organizations/{id}/block` — статус → `blocked`
 
@@ -121,7 +120,7 @@ _(сюда переносить задачу когда начал)_
 
 ## Postman / Демо
 
-- [ ] Postman collection с готовым end-to-end сценарием:
+- [ ] Postman collection, end-to-end сценарий:
   1. Регистрация owner
   2. Создание организации
   3. Создание сотрудника
