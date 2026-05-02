@@ -6,6 +6,5 @@ public sealed record UpdateEmployeeRequest(
     string? MiddleName,
     string? Position,
     string? Phone,
-    string? Email,
-    Guid? BranchId
+    string? Email
 );

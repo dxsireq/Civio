@@ -7,6 +7,5 @@ public sealed record CreateEmployeeRequest(
     string? Position,
     string? Phone,
     string? Email,
-    Guid? BranchId,
     Guid? UserId
 );

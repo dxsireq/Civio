@@ -98,6 +98,8 @@ public sealed class OrganizationConfiguration : IEntityTypeConfiguration<Organiz
         builder.Property(x => x.Website).HasColumnName("website").HasMaxLength(255);
         builder.Property(x => x.LegalName).HasColumnName("legal_name").HasMaxLength(255);
         builder.Property(x => x.Inn).HasColumnName("inn").HasMaxLength(20);
+        builder.Property(x => x.City).HasColumnName("city").HasMaxLength(100).IsRequired();
+        builder.Property(x => x.Address).HasColumnName("address").IsRequired();
         builder.Property(x => x.StatusId).HasColumnName("status_id");
         builder.Property(x => x.OwnerUserId).HasColumnName("owner_user_id");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();
@@ -156,32 +158,6 @@ public sealed class OrganizationModerationHistoryConfiguration : IEntityTypeConf
     }
 }
 
-public sealed class BranchConfiguration : IEntityTypeConfiguration<Branch>
-{
-    public void Configure(EntityTypeBuilder<Branch> builder)
-    {
-        builder.ToTable("branches");
-
-        builder.HasKey(x => x.Id);
-
-        builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
-        builder.Property(x => x.OrganizationId).HasColumnName("organization_id");
-        builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
-        builder.Property(x => x.City).HasColumnName("city").HasMaxLength(100).IsRequired();
-        builder.Property(x => x.Address).HasColumnName("address").IsRequired();
-        builder.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(30);
-        builder.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true).IsRequired();
-        builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();
-        builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
-
-        builder.HasOne(x => x.Organization)
-            .WithMany(x => x.Branches)
-            .HasForeignKey(x => x.OrganizationId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasIndex(x => x.OrganizationId);
-    }
-}
 
 public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
 {
@@ -194,7 +170,6 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
         builder.Property(x => x.UserId).HasColumnName("user_id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id");
-        builder.Property(x => x.BranchId).HasColumnName("branch_id");
         builder.Property(x => x.FirstName).HasColumnName("first_name").HasMaxLength(100).IsRequired();
         builder.Property(x => x.LastName).HasColumnName("last_name").HasMaxLength(100).IsRequired();
         builder.Property(x => x.MiddleName).HasColumnName("middle_name").HasMaxLength(100);
@@ -215,13 +190,7 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
             .HasForeignKey(x => x.OrganizationId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(x => x.Branch)
-            .WithMany(x => x.Employees)
-            .HasForeignKey(x => x.BranchId)
-            .OnDelete(DeleteBehavior.SetNull);
-
         builder.HasIndex(x => x.OrganizationId);
-        builder.HasIndex(x => x.BranchId);
     }
 }
 
@@ -468,7 +437,6 @@ public sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
         builder.Property(x => x.CitizenId).HasColumnName("citizen_id");
         builder.Property(x => x.OrganizationId).HasColumnName("organization_id");
-        builder.Property(x => x.BranchId).HasColumnName("branch_id");
         builder.Property(x => x.EmployeeId).HasColumnName("employee_id");
         builder.Property(x => x.ServiceId).HasColumnName("service_id");
         builder.Property(x => x.SlotId).HasColumnName("slot_id");
@@ -485,11 +453,6 @@ public sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.HasOne(x => x.Organization)
             .WithMany(x => x.Bookings)
             .HasForeignKey(x => x.OrganizationId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.Branch)
-            .WithMany(x => x.Bookings)
-            .HasForeignKey(x => x.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Employee)
@@ -515,6 +478,7 @@ public sealed class BookingConfiguration : IEntityTypeConfiguration<Booking>
         builder.HasIndex(x => x.CitizenId);
         builder.HasIndex(x => x.OrganizationId);
         builder.HasIndex(x => x.EmployeeId);
+
         builder.HasIndex(x => x.ServiceId);
         builder.HasIndex(x => x.StatusId);
         builder.HasIndex(x => x.SlotId);

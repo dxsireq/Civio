@@ -10,9 +10,6 @@ public sealed class Booking
     public Guid OrganizationId { get; set; }
     public Organization Organization { get; set; } = null!;
 
-    public Guid? BranchId { get; set; }
-    public Branch? Branch { get; set; }
-
     public Guid? EmployeeId { get; set; }
     public Employee? Employee { get; set; }
 

@@ -29,6 +29,12 @@ public sealed class OrganizationService : IOrganizationService
         if (name.Length > 200)
             throw new ArgumentException("Organization name is too long.");
 
+        if (string.IsNullOrWhiteSpace(request.City))
+            throw new ArgumentException("City is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Address))
+            throw new ArgumentException("Address is required.");
+
         var pendingStatus = await _dbContext.OrganizationStatuses
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Code == "pending", cancellationToken);
@@ -42,6 +48,8 @@ public sealed class OrganizationService : IOrganizationService
             OwnerUserId = ownerUserId,
             StatusId = pendingStatus.Id,
             Name = name,
+            City = request.City.Trim(),
+            Address = request.Address.Trim(),
             Description = NormalizeNullable(request.Description),
             Email = NormalizeNullable(request.Email),
             Phone = NormalizeNullable(request.Phone),
@@ -53,17 +61,7 @@ public sealed class OrganizationService : IOrganizationService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return new OrganizationResponse(
-            organization.Id,
-            organization.OwnerUserId!.Value,
-            organization.Name,
-            pendingStatus.Code,
-            organization.Description,
-            organization.Email,
-            organization.Phone,
-            organization.Website,
-            organization.CreatedAt.UtcDateTime
-        );
+        return ToResponse(organization, pendingStatus.Code);
     }
 
     public async Task<IReadOnlyList<OrganizationResponse>> GetMyAsync(
@@ -78,16 +76,7 @@ public sealed class OrganizationService : IOrganizationService
             .ToListAsync(cancellationToken);
 
         return organizations
-            .Select(o => new OrganizationResponse(
-                o.Id,
-                o.OwnerUserId!.Value,
-                o.Name,
-                o.Status.Code,
-                o.Description,
-                o.Email,
-                o.Phone,
-                o.Website,
-                o.CreatedAt.UtcDateTime))
+            .Select(o => ToResponse(o, o.Status.Code))
             .ToList();
     }
 
@@ -111,16 +100,7 @@ public sealed class OrganizationService : IOrganizationService
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
-        return new OrganizationResponse(
-            organization.Id,
-            organization.OwnerUserId!.Value,
-            organization.Name,
-            organization.Status.Code,
-            organization.Description,
-            organization.Email,
-            organization.Phone,
-            organization.Website,
-            organization.CreatedAt.UtcDateTime);
+        return ToResponse(organization, organization.Status.Code);
     }
 
     public async Task<OrganizationResponse> UpdateAsync(
@@ -139,7 +119,15 @@ public sealed class OrganizationService : IOrganizationService
         if (!OrganizationAccess.IsOwner(requestingUserId, organization))
             throw new UnauthorizedAccessException("Only the owner can edit this organization.");
 
+        if (string.IsNullOrWhiteSpace(request.City))
+            throw new ArgumentException("City is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Address))
+            throw new ArgumentException("Address is required.");
+
         organization.Name = request.Name.Trim();
+        organization.City = request.City.Trim();
+        organization.Address = request.Address.Trim();
         organization.Description = NormalizeNullable(request.Description);
         organization.Email = NormalizeNullable(request.Email);
         organization.Phone = NormalizeNullable(request.Phone);
@@ -148,22 +136,23 @@ public sealed class OrganizationService : IOrganizationService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return new OrganizationResponse(
-            organization.Id,
-            organization.OwnerUserId!.Value,
-            organization.Name,
-            organization.Status.Code,
-            organization.Description,
-            organization.Email,
-            organization.Phone,
-            organization.Website,
-            organization.CreatedAt.UtcDateTime);
+        return ToResponse(organization, organization.Status.Code);
     }
 
-    private static string? NormalizeNullable(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
-    }
+    private static OrganizationResponse ToResponse(Organization o, string statusCode) =>
+        new(
+            o.Id,
+            o.OwnerUserId!.Value,
+            o.Name,
+            statusCode,
+            o.City,
+            o.Address,
+            o.Description,
+            o.Email,
+            o.Phone,
+            o.Website,
+            o.CreatedAt.UtcDateTime);
+
+    private static string? NormalizeNullable(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

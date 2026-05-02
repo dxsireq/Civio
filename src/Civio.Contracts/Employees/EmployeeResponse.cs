@@ -3,7 +3,6 @@ namespace Civio.Contracts.Employees;
 public sealed record EmployeeResponse(
     Guid Id,
     Guid OrganizationId,
-    Guid? BranchId,
     Guid? UserId,
     string FirstName,
     string LastName,

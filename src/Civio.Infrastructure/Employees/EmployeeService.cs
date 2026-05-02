@@ -45,7 +45,6 @@ public sealed class EmployeeService : IEmployeeService
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,
-            BranchId = request.BranchId,
             UserId = request.UserId,
             FirstName = firstName,
             LastName = lastName,
@@ -155,7 +154,6 @@ public sealed class EmployeeService : IEmployeeService
         employee.Position = NormalizeNullable(request.Position);
         employee.Phone = NormalizeNullable(request.Phone);
         employee.Email = NormalizeNullable(request.Email);
-        employee.BranchId = request.BranchId;
         employee.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -187,6 +185,7 @@ public sealed class EmployeeService : IEmployeeService
 
         employee.IsActive = false;
         employee.UpdatedAt = DateTimeOffset.UtcNow;
+        _dbContext.Entry(employee).Property(e => e.IsActive).IsModified = true;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -195,7 +194,6 @@ public sealed class EmployeeService : IEmployeeService
         new(
             e.Id,
             e.OrganizationId,
-            e.BranchId,
             e.UserId,
             e.FirstName,
             e.LastName,

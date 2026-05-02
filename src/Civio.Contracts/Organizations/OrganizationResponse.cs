@@ -5,6 +5,8 @@ public sealed record OrganizationResponse(
     Guid OwnerUserId,
     string Name,
     string Status,
+    string City,
+    string Address,
     string? Description,
     string? Email,
     string? Phone,

@@ -5,6 +5,10 @@ namespace Civio.Contracts.Organizations;
 public sealed record UpdateOrganizationRequest(
     [property: Required, MaxLength(200)]
     string Name,
+    [property: Required, MaxLength(100)]
+    string City,
+    [property: Required, MaxLength(500)]
+    string Address,
     [property: MaxLength(1000)]
     string? Description,
     [property: EmailAddress, MaxLength(256)]

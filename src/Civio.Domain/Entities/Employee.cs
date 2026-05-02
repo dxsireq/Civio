@@ -10,9 +10,6 @@ public sealed class Employee
     public Guid OrganizationId { get; set; }
     public Organization Organization { get; set; } = null!;
 
-    public Guid? BranchId { get; set; }
-    public Branch? Branch { get; set; }
-
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? MiddleName { get; set; }
