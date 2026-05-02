@@ -15,8 +15,59 @@ public static class OrganizationEndpoints
             .RequireAuthorization();
 
         group.MapPost("/", CreateOrganizationAsync);
+        group.MapGet("/my", GetMyOrganizationsAsync);
+        group.MapGet("/{id:guid}", GetOrganizationByIdAsync);
+        group.MapPut("/{id:guid}", UpdateOrganizationAsync);
 
         return app;
+    }
+
+    private static async Task<IResult> GetMyOrganizationsAsync(
+        ClaimsPrincipal user,
+        IOrganizationService organizationService,
+        CancellationToken cancellationToken)
+    {
+        var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(userIdValue, out var ownerUserId))
+            return Results.Unauthorized();
+
+        var organizations = await organizationService.GetMyAsync(ownerUserId, cancellationToken);
+
+        return Results.Ok(organizations);
+    }
+
+    private static async Task<IResult> GetOrganizationByIdAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        IOrganizationService organizationService,
+        CancellationToken cancellationToken)
+    {
+        var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(userIdValue, out var requestingUserId))
+            return Results.Unauthorized();
+
+        var organization = await organizationService.GetByIdAsync(id, requestingUserId, cancellationToken);
+
+        return Results.Ok(organization);
+    }
+
+    private static async Task<IResult> UpdateOrganizationAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        [FromBody] UpdateOrganizationRequest request,
+        IOrganizationService organizationService,
+        CancellationToken cancellationToken)
+    {
+        var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(userIdValue, out var requestingUserId))
+            return Results.Unauthorized();
+
+        var organization = await organizationService.UpdateAsync(id, requestingUserId, request, cancellationToken);
+
+        return Results.Ok(organization);
     }
 
     private static async Task<IResult> CreateOrganizationAsync(

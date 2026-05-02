@@ -9,18 +9,9 @@ _(сюда переносить задачу когда начал)_
 
 ---
 
-## Инфраструктура (сделать до всего остального)
+## Инфраструктура 
 
 - [ ] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
-
----
-
-## Organizations
-
-- [ ] `GET /api/organizations/my` — список организаций юзера (owner_user_id из JWT, AsNoTracking)
-- [ ] `GET /api/organizations/{id}` — по id, доступ: owner/employee, 403 иначе
-- [ ] `PUT /api/organizations/{id}` — редактировать, только owner
-- [ ] Доступ через `OrganizationAccess.IsOwner` / `IsEmployee` везде
 
 ---
 
@@ -148,3 +139,7 @@ _(сюда переносить задачу когда начал)_
 - [x] Документация (CLAUDE.md, architecture.md, project-context.md, thesis-summary.md)
 - [x] Error handling middleware — глобальный обработчик, возврат `{ error, statusCode }`
 - [x] Валидация моделей — DataAnnotations на всех Contracts + `AddProblemDetails()`
+- [x] `GET /api/organizations/my` — список организаций юзера (owner_user_id из JWT, AsNoTracking)
+- [x] `GET /api/organizations/{id}` — по id, доступ: owner/employee, 403 иначе
+- [x] `PUT /api/organizations/{id}` — редактировать, только owner
+- [x] Доступ через `OrganizationAccess.IsOwner` / `IsEmployee` везде
