@@ -1,30 +1,7 @@
 # Civio — TODO
 
-> Приоритет: сверху вниз. Завершил — перемести в `## Готово`, не удаляй.
-
----
-
-## В работе
-_(сюда переносить задачу когда начал)_
-
----
-
-## Services (услуги)
-
-- [x] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
-- [x] `GET /api/organizations/{id}/services` — список услуг, публично
-- [x] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать, только owner
-- [x] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать (`is_active = false`), только owner
-
----
-
-## Schedule (расписание)
-
-- [ ] `POST /api/employees/{id}/work-days` — создать рабочий день (work_date, start_time, end_time, break_start?, break_end?), owner или сотрудник
-- [ ] `GET /api/employees/{id}/work-days` — рабочие дни сотрудника
-- [ ] `PUT /api/employees/{id}/work-days/{workDayId}` — редактировать
-- [ ] `DELETE /api/employees/{id}/work-days/{workDayId}` — удалить (каскад: booking_slots)
-- [ ] `POST /api/employees/{id}/schedule-templates` — шаблон по дням недели (опционально, упрощает work_days)
+## Как работать с TODO файлом:
+- выполнил задачу -> перенёс в ## Готово
 
 ---
 
@@ -133,3 +110,12 @@ _(сюда переносить задачу когда начал)_
 - [x] `GET /api/organizations/{id}/employees` — список сотрудников, только owner
 - [x] `DELETE /api/organizations/{id}/employees/{employeeId}` — удалить сотрудника, только owner
 - [x] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
+- [x] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
+- [x] `GET /api/organizations/{id}/services` — список услуг, публично
+- [x] `PUT /api/organizations/{id}/services/{serviceId}` — редактировать, только owner
+- [x] `DELETE /api/organizations/{id}/services/{serviceId}` — деактивировать (`is_active = false`), только owner
+- [x] `POST /api/employees/{id}/work-days` — создать рабочий день (work_date, start_time, end_time, break_start?, break_end?), owner или сотрудник
+- [x] `GET /api/employees/{id}/work-days` — рабочие дни сотрудника
+- [x] `PUT /api/employees/{id}/work-days/{workDayId}` — редактировать
+- [x] `DELETE /api/employees/{id}/work-days/{workDayId}` — удалить (каскад: booking_slots)
+- [x] `POST /api/employees/{id}/schedule-templates` — шаблон по дням недели (опционально, упрощает work_days)

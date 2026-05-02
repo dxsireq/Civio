@@ -150,6 +150,8 @@ authGroup.MapGet("/me", async (
 app.MapOrganizationEndpoints();
 app.MapEmployeeEndpoints();
 app.MapServiceEndpoints();
+app.MapWorkDayEndpoints();
+app.MapScheduleTemplateEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();
