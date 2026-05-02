@@ -110,6 +110,21 @@ await _db.SaveChangesAsync();
 
 Lazy loading отключён. Связи грузить явно через `.Include()`.
 
+### Баг: HasDefaultValue(true) + IsActive = false
+
+Сущности с `HasDefaultValue(true)` на `IsActive`: `organizations`, `employees`, `services`, `booking_slots`, `schedule_templates`, `work_days`, `device_push_tokens`.
+
+EF Core использует `false` (CLR default для bool) как sentinel → `IsActive = false` воспринимается как "не задано" → пропускается в UPDATE.
+
+**Фикс при деактивации:**
+
+```csharp
+entity.IsActive = false;
+entity.UpdatedAt = DateTimeOffset.UtcNow;
+_dbContext.Entry(entity).Property(e => e.IsActive).IsModified = true;
+await _dbContext.SaveChangesAsync(cancellationToken);
+```
+
 ---
 
 ## Модель доступа
