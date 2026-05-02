@@ -152,6 +152,7 @@ app.MapEmployeeEndpoints();
 app.MapServiceEndpoints();
 app.MapWorkDayEndpoints();
 app.MapScheduleTemplateEndpoints();
+app.MapSlotsEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

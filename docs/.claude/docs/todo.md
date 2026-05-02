@@ -7,11 +7,11 @@
 
 ## Slots (доступное время)
 
-- [ ] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — доступные слоты на дату
+- [x] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — доступные слоты на дату
   - work_days сотрудников с нужной услугой
   - минус bookings
   - окна кратные `service.duration_minutes`
-- [ ] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД
+- [x] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД
 
 ---
 

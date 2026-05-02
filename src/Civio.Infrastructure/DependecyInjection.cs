@@ -2,11 +2,13 @@ using Civio.Application.Employees;
 using Civio.Application.Organizations;
 using Civio.Application.Schedule;
 using Civio.Application.Services;
+using Civio.Application.Slots;
 using Civio.Infrastructure.Employees;
 using Civio.Infrastructure.Organizations;
 using Civio.Infrastructure.Persistence;
 using Civio.Infrastructure.Schedule;
 using Civio.Infrastructure.Services;
+using Civio.Infrastructure.Slots;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,8 @@ public static class DependencyInjection
         services.AddScoped<IServiceService, ServiceService>();
         services.AddScoped<IWorkDayService, WorkDayService>();
         services.AddScoped<IScheduleTemplateService, ScheduleTemplateService>();
+        services.AddScoped<SlotCalculationService>();
+        services.AddScoped<IAvailableSlotsService, AvailableSlotsService>();
 
         return services;
     }
