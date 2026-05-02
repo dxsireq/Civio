@@ -9,20 +9,6 @@ _(сюда переносить задачу когда начал)_
 
 ---
 
-## Инфраструктура 
-
-- [ ] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
-
----
-
-## Employees
-
-- [ ] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` nullable (сотрудник может быть не зарегистрирован в системе)
-- [ ] `GET /api/organizations/{id}/employees` — список сотрудников, только owner
-- [ ] `DELETE /api/organizations/{id}/employees/{employeeId}` — удалить сотрудника, только owner
-
----
-
 ## Services (услуги)
 
 - [ ] `POST /api/organizations/{id}/services` — создать услугу (name, description, duration_minutes, price), только owner
@@ -143,3 +129,7 @@ _(сюда переносить задачу когда начал)_
 - [x] `GET /api/organizations/{id}` — по id, доступ: owner/employee, 403 иначе
 - [x] `PUT /api/organizations/{id}` — редактировать, только owner
 - [x] Доступ через `OrganizationAccess.IsOwner` / `IsEmployee` везде
+- [x] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` nullable (сотрудник может быть не зарегистрирован в системе)
+- [x] `GET /api/organizations/{id}/employees` — список сотрудников, только owner
+- [x] `DELETE /api/organizations/{id}/employees/{employeeId}` — удалить сотрудника, только owner
+- [x] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
