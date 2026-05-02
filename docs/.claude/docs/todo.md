@@ -28,7 +28,7 @@ _(сюда переносить задачу когда начал)_
 
 ## Employees
 
-- [ ] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` обязателен (существующий юзер)
+- [ ] `POST /api/organizations/{id}/employees` — создать сотрудника, только owner, `user_id` nullable (сотрудник может быть не зарегистрирован в системе)
 - [ ] `GET /api/organizations/{id}/employees` — список сотрудников, только owner
 - [ ] `DELETE /api/organizations/{id}/employees/{employeeId}` — удалить сотрудника, только owner
 

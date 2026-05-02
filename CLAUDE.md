@@ -4,7 +4,7 @@ Backend-платформа: управление организациями, з�
 
 ## Стек
 
-- **Runtime:** .NET 9, ASP.NET Core Minimal API
+- **Runtime:** .NET 10, ASP.NET Core Minimal API
 - **ORM:** EF Core (без migrations, SQL-first)
 - **БД:** PostgreSQL (Docker), схема через `database/init.sql`
 - **Auth:** JWT Bearer (без refresh tokens, пока)

@@ -78,7 +78,7 @@
 - **Push-токен устройства** — для FCM
 
 ### Справочники (статические таблицы)
-- `organization_statuses` — pending, active, blocked
+- `organization_statuses` — pending, approved, rejected, blocked
 - `booking_statuses` — создана, подтверждена, отменена, завершена
 - `slot_statuses`
 - `notification_channels` — email, push
