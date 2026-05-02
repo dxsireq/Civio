@@ -533,7 +533,7 @@ public sealed class BookingQrCodeConfiguration : IEntityTypeConfiguration<Bookin
 
         builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
         builder.Property(x => x.BookingId).HasColumnName("booking_id");
-        builder.Property(x => x.Token).HasColumnName("token").HasMaxLength(255).IsRequired();
+        builder.Property(x => x.Token).HasColumnName("token").IsRequired();
         builder.Property(x => x.ExpiresAt).HasColumnName("expires_at");
         builder.Property(x => x.UsedAt).HasColumnName("used_at");
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();

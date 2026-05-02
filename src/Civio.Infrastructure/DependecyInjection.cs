@@ -1,8 +1,10 @@
+using Civio.Application.Bookings;
 using Civio.Application.Employees;
 using Civio.Application.Organizations;
 using Civio.Application.Schedule;
 using Civio.Application.Services;
 using Civio.Application.Slots;
+using Civio.Infrastructure.Bookings;
 using Civio.Infrastructure.Employees;
 using Civio.Infrastructure.Organizations;
 using Civio.Infrastructure.Persistence;
@@ -34,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IScheduleTemplateService, ScheduleTemplateService>();
         services.AddScoped<SlotCalculationService>();
         services.AddScoped<IAvailableSlotsService, AvailableSlotsService>();
+        services.AddScoped<IBookingService, BookingService>();
 
         return services;
     }

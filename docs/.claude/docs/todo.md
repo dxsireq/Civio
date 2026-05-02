@@ -5,32 +5,22 @@
 
 ---
 
-## Slots (доступное время)
-
-- [x] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — доступные слоты на дату
-  - work_days сотрудников с нужной услугой
-  - минус bookings
-  - окна кратные `service.duration_minutes`
-- [x] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД
-
----
-
 ## Bookings (бронирования)
 
-- [ ] `POST /api/bookings` — создать (organizationId, serviceId, employeeId, startAt)
+- [x] `POST /api/bookings` — создать (organizationId, serviceId, employeeId, startAt)
   - проверить слот
   - `SELECT FOR UPDATE` на work_days строку
   - booking статус `created`
   - создать booking_slot
   - booking_qr_code (JWT: bookingId + userId + expiresAt)
-- [ ] `GET /api/bookings/my` — бронирования юзера (citizen)
-- [ ] `GET /api/bookings/{id}` — детали, доступ: citizen-владелец или employee
-- [ ] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, → booking_status_history
-- [ ] `GET /api/organizations/{id}/bookings` — бронирования организации, owner/employee
-- [ ] `POST /api/bookings/{id}/confirm` — подтвердить, статус → `confirmed`
-- [ ] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
-- [ ] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
-- [ ] Все смены статуса → `booking_status_history`
+- [x] `GET /api/bookings/my` — бронирования юзера (citizen)
+- [x] `GET /api/bookings/{id}` — детали, доступ: citizen-владелец или employee
+- [x] `POST /api/bookings/{id}/cancel` — отмена клиентом, статус → `cancelled`, → booking_status_history
+- [x] `GET /api/organizations/{id}/bookings` — бронирования организации, owner/employee
+- [x] `POST /api/bookings/{id}/confirm` — подтвердить, статус → `confirmed`
+- [x] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
+- [x] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
+- [x] Все смены статуса → `booking_status_history`
 
 ---
 
@@ -119,3 +109,8 @@
 - [x] `PUT /api/employees/{id}/work-days/{workDayId}` — редактировать
 - [x] `DELETE /api/employees/{id}/work-days/{workDayId}` — удалить (каскад: booking_slots)
 - [x] `POST /api/employees/{id}/schedule-templates` — шаблон по дням недели (опционально, упрощает work_days)
+- [x] `GET /api/organizations/{id}/available-slots?serviceId=&date=` — доступные слоты на дату
+  - work_days сотрудников с нужной услугой
+  - минус bookings
+  - окна кратные `service.duration_minutes`
+- [x] `SlotCalculationService.GetAvailableSlots(workDay, existingBookings, durationMinutes)` — чистая доменная логика, без БД

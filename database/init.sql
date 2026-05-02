@@ -209,7 +209,7 @@ CREATE TABLE booking_status_history (
 CREATE TABLE booking_qr_codes (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     booking_id      UUID NOT NULL UNIQUE REFERENCES bookings(id) ON DELETE CASCADE,
-    token           VARCHAR(255) NOT NULL UNIQUE,
+    token           TEXT NOT NULL UNIQUE,
     expires_at      TIMESTAMPTZ,
     used_at         TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
