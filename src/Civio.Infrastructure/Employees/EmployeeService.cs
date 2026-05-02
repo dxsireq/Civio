@@ -82,6 +82,7 @@ public sealed class EmployeeService : IEmployeeService
             throw new UnauthorizedAccessException("Access denied.");
 
         return organization.Employees
+            .Where(e => e.IsActive)
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
             .Select(ToResponse)
@@ -108,7 +109,7 @@ public sealed class EmployeeService : IEmployeeService
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
-        var employee = organization.Employees.FirstOrDefault(e => e.Id == id);
+        var employee = organization.Employees.FirstOrDefault(e => e.Id == id && e.IsActive);
 
         if (employee is null)
             throw new KeyNotFoundException($"Employee {id} not found.");
