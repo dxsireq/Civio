@@ -148,6 +148,7 @@ authGroup.MapGet("/me", async (
 .RequireAuthorization();
 
 app.MapOrganizationEndpoints();
+app.MapEmployeeEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

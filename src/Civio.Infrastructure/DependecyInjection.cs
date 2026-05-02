@@ -1,4 +1,6 @@
+using Civio.Application.Employees;
 using Civio.Application.Organizations;
+using Civio.Infrastructure.Employees;
 using Civio.Infrastructure.Organizations;
 using Civio.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
 
         return services;
     }
