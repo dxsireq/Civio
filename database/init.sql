@@ -42,6 +42,8 @@ CREATE TABLE organization_statuses (
 CREATE TABLE organizations (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name            VARCHAR(255) NOT NULL,
+    city            VARCHAR(100) NOT NULL,
+    address         TEXT NOT NULL,
     description     TEXT,
     email           VARCHAR(255),
     phone           VARCHAR(30),
@@ -64,18 +66,6 @@ CREATE TABLE organization_moderation_history (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE branches (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    name            VARCHAR(255) NOT NULL,
-    city            VARCHAR(100) NOT NULL,
-    address         TEXT NOT NULL,
-    phone           VARCHAR(30),
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ
-);
-
 -- =========================
 -- EMPLOYEES / SERVICES
 -- =========================
@@ -84,7 +74,6 @@ CREATE TABLE employees (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id         UUID REFERENCES users(id),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    branch_id       UUID REFERENCES branches(id) ON DELETE SET NULL,
     first_name      VARCHAR(100) NOT NULL,
     last_name       VARCHAR(100) NOT NULL,
     middle_name     VARCHAR(100),
@@ -198,7 +187,6 @@ CREATE TABLE bookings (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     citizen_id      UUID NOT NULL REFERENCES users(id),
     organization_id UUID NOT NULL REFERENCES organizations(id),
-    branch_id       UUID REFERENCES branches(id),
     employee_id     UUID REFERENCES employees(id),
     service_id      UUID NOT NULL REFERENCES services(id),
     slot_id         UUID REFERENCES booking_slots(id),
@@ -282,10 +270,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_organizations_status_id ON organizations(status_id);
 CREATE INDEX idx_organizations_owner_user_id ON organizations(owner_user_id);
 
-CREATE INDEX idx_branches_organization_id ON branches(organization_id);
-
 CREATE INDEX idx_employees_organization_id ON employees(organization_id);
-CREATE INDEX idx_employees_branch_id ON employees(branch_id);
 
 CREATE INDEX idx_services_organization_id ON services(organization_id);
 CREATE INDEX idx_services_category_id ON services(category_id);
@@ -348,3 +333,129 @@ INSERT INTO notification_statuses (code, name) VALUES
 ('created', 'Создано'),
 ('sent', 'Отправлено'),
 ('failed', 'Ошибка отправки');
+
+-- =============================================================
+-- Credentials (password hash is a placeholder — see note below):
+--   owner@civio.test    / Test1234!
+--   employee@civio.test / Test1234!
+--   client@civio.test   / Test1234!
+--
+-- NOTE: password_hash uses ASP.NET Core PasswordHasher<User> (PBKDF2).
+-- To get real hashes, register each user via POST /api/auth/register,
+-- then copy the generated hash:
+--   UPDATE users SET password_hash = '<hash>' WHERE email = 'owner@civio.test';
+--
+-- Fixed UUIDs for predictable Postman / integration testing:
+--   owner    a0000000-0000-0000-0000-000000000001
+--   employee a0000000-0000-0000-0000-000000000002
+--   client   a0000000-0000-0000-0000-000000000003
+--   org      b0000000-0000-0000-0000-000000000001
+--   emp rec  c0000000-0000-0000-0000-000000000001
+--   service  d0000000-0000-0000-0000-000000000001
+--   work_day e0000000-0000-0000-0000-000000000001
+-- =============================================================
+
+-- -------------------------------------------------------------
+-- Users
+-- -------------------------------------------------------------
+INSERT INTO users (id, email, password_hash, first_name, last_name, is_active, created_at)
+VALUES
+    ('a0000000-0000-0000-0000-000000000001', 'owner@civio.test',
+     'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
+     'Иван', 'Петров', true, NOW()),
+
+    ('a0000000-0000-0000-0000-000000000002', 'employee@civio.test',
+     'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
+     'Мария', 'Иванова', true, NOW()),
+
+    ('a0000000-0000-0000-0000-000000000003', 'client@civio.test',
+     'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
+     'Алексей', 'Сидоров', true, NOW())
+ON CONFLICT (email) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- User roles
+-- -------------------------------------------------------------
+INSERT INTO user_roles (user_id, role_id)
+SELECT 'a0000000-0000-0000-0000-000000000001', id FROM roles WHERE name = 'Citizen'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT 'a0000000-0000-0000-0000-000000000002', id FROM roles WHERE name = 'OrganizationEmployee'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT 'a0000000-0000-0000-0000-000000000003', id FROM roles WHERE name = 'Citizen'
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Organization
+-- -------------------------------------------------------------
+INSERT INTO organizations (id, name, city, address, description, email, phone, status_id, owner_user_id, created_at)
+VALUES (
+    'b0000000-0000-0000-0000-000000000001',
+    'Студия красоты Civio',
+    'Москва',
+    'ул. Тверская, 1',
+    'Профессиональные услуги по уходу за внешностью',
+    'info@civio.test',
+    '+7 900 000-00-01',
+    (SELECT id FROM organization_statuses WHERE code = 'approved'),
+    'a0000000-0000-0000-0000-000000000001',
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Employee
+-- -------------------------------------------------------------
+INSERT INTO employees (id, user_id, organization_id, first_name, last_name, position, phone, email, is_active, created_at)
+VALUES (
+    'c0000000-0000-0000-0000-000000000001',
+    'a0000000-0000-0000-0000-000000000002',
+    'b0000000-0000-0000-0000-000000000001',
+    'Мария',
+    'Иванова',
+    'Парикмахер',
+    '+7 900 000-00-02',
+    'employee@civio.test',
+    true,
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Service
+-- -------------------------------------------------------------
+INSERT INTO services (id, organization_id, name, description, duration_minutes, price, is_active, created_at)
+VALUES (
+    'd0000000-0000-0000-0000-000000000001',
+    'b0000000-0000-0000-0000-000000000001',
+    'Стрижка',
+    'Профессиональная стрижка',
+    60,
+    1500.00,
+    true,
+    NOW()
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Employee ↔ Service
+INSERT INTO employee_services (employee_id, service_id)
+VALUES ('c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001')
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Work day  (2026-05-04, Monday after seed date 2026-05-02)
+-- -------------------------------------------------------------
+INSERT INTO work_days (id, employee_id, work_date, start_time, end_time, break_start, break_end, is_working, created_at)
+VALUES (
+    'e0000000-0000-0000-0000-000000000001',
+    'c0000000-0000-0000-0000-000000000001',
+    '2026-05-04',
+    '09:00', '18:00',
+    '13:00', '14:00',
+    true,
+    NOW()
+)
+ON CONFLICT (employee_id, work_date) DO NOTHING;
