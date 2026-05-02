@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Civio.Api.Endpoints;
+using Civio.Api.Middleware;
 using Civio.Infrastructure;
 
 
@@ -72,6 +73,9 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddValidation();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
@@ -81,6 +85,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseExceptionHandler();
 
 //app.UseHttpsRedirection();
 

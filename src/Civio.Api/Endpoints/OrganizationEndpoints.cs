@@ -30,27 +30,11 @@ public static class OrganizationEndpoints
         if (!Guid.TryParse(userIdValue, out var ownerUserId))
             return Results.Unauthorized();
 
-        try
-        {
-            var response = await organizationService.CreateAsync(
-                ownerUserId,
-                request,
-                cancellationToken);
+        var response = await organizationService.CreateAsync(
+            ownerUserId,
+            request,
+            cancellationToken);
 
-            return Results.Created($"/api/organizations/{response.Id}", response);
-        }
-        catch (ArgumentException ex)
-        {
-            return Results.BadRequest(new
-            {
-                error = ex.Message
-            });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Results.Problem(
-                detail: ex.Message,
-                statusCode: StatusCodes.Status500InternalServerError);
-        }
+        return Results.Created($"/api/organizations/{response.Id}", response);
     }
 }

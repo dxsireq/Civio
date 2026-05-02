@@ -11,8 +11,6 @@ _(сюда переносить задачу когда начал)_
 
 ## Инфраструктура (сделать до всего остального)
 
-- [ ] Error handling middleware — глобальный обработчик, возврат `{ error, statusCode }`
-- [ ] Валидация моделей — DataAnnotations на всех Contracts + `AddProblemDetails()`
 - [ ] Seed data — `database/test-data.sql`: пользователь, организация, сотрудник, услуга, рабочий день
 
 ---
@@ -148,3 +146,5 @@ _(сюда переносить задачу когда начал)_
 - [x] Решение: расписание on-demand (без pre-generated slots)
 - [x] Решение: QR-код как подписанный токен
 - [x] Документация (CLAUDE.md, architecture.md, project-context.md, thesis-summary.md)
+- [x] Error handling middleware — глобальный обработчик, возврат `{ error, statusCode }`
+- [x] Валидация моделей — DataAnnotations на всех Contracts + `AddProblemDetails()`
