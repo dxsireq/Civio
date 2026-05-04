@@ -41,6 +41,7 @@ Swagger: `https://localhost:{port}/swagger`
 | `.claude/docs/project-context.md` | Текущее состояние, что реализовано, техдолг |
 | `.claude/docs/thesis-summary.md` | Доменная модель, бизнес-требования из диплома |
 | `.claude/docs/web-client-architecture.md` | Архитектура веб-клиента |
+| `.claude/docs/mobile-client-architecture.md` | Архитектура мобильного-клиента |
 
 ## Ключевые правила (не нарушать)
 
