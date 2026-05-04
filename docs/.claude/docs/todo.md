@@ -3,15 +3,7 @@
 ## QR-коды
 
 - [ ] изменить вывод scan endpoint
----
-
-## Moderation (Admin)
-
-- [ ] `GET /api/admin/organizations` — все организации, только PlatformAdmin
-- [ ] `POST /api/admin/organizations/{id}/approve` — статус → `approved`, → `organization_moderation_history`
-- [ ] `POST /api/admin/organizations/{id}/reject` — статус → `rejected`
-- [ ] `POST /api/admin/organizations/{id}/block` — статус → `blocked`
-
+- [ ] 
 ---
 
 ## Демо
@@ -92,3 +84,7 @@
 - [x] Запись в `notifications` при каждой смене статуса
 - [x] `GET /api/notifications/my` — уведомления юзера
 - [x] email уведомления
+- [x] `GET /api/admin/organizations` — все организации, только PlatformAdmin
+- [x] `POST /api/admin/organizations/{id}/approve` — статус → `approved`, → `organization_moderation_history`
+- [x] `POST /api/admin/organizations/{id}/reject` — статус → `rejected`
+- [x] `POST /api/admin/organizations/{id}/block` — статус → `blocked`
