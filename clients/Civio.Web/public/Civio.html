@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Civio · Online booking platform</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; }
+    #root { height: 100vh; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="layout.jsx"></script>
+  <script type="text/babel" src="screens-auth.jsx"></script>
+  <script type="text/babel" src="screens-admin.jsx"></script>
+  <script type="text/babel" src="screens-orgs.jsx"></script>
+  <script type="text/babel" src="screens-org-mgmt.jsx"></script>
+  <script type="text/babel" src="screens-emp-svc.jsx"></script>
+  <script type="text/babel" src="screens-bookings.jsx"></script>
+  <script type="text/babel" src="screens-scanner.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    const W = 1360, H = 900;
+    const AUTH_W = 460, AUTH_H = 720;
+    const SCAN_W = 1100, SCAN_H = 900;
+
+    const App = () => (
+      <DesignCanvas>
+        <DCSection id="auth" title="Аутентификация" subtitle="Вход и регистрация · общий centered-card layout">
+          <DCArtboard id="login" label="01 · Вход /login" width={AUTH_W} height={AUTH_H}>
+            <LoginScreen />
+          </DCArtboard>
+          <DCArtboard id="register" label="02 · Регистрация /register" width={AUTH_W} height={AUTH_H}>
+            <RegisterScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="admin" title="Админ-панель" subtitle="Модерация организаций — для команды Civio">
+          <DCArtboard id="admin-list" label="03 · Список организаций" width={W} height={H}>
+            <AdminOrgsListScreen />
+          </DCArtboard>
+          <DCArtboard id="admin-detail" label="04 · Карточка организации" width={W} height={H}>
+            <AdminOrgDetailScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="owner-orgs" title="Организации владельца" subtitle="Top-nav layout · до выбора конкретной организации">
+          <DCArtboard id="my-orgs" label="05 · Мои организации /" width={W} height={H}>
+            <MyOrgsScreen />
+          </DCArtboard>
+          <DCArtboard id="create-org" label="06 · Создание организации" width={W} height={H}>
+            <CreateOrgScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="org-mgmt" title="Управление организацией" subtitle="Sidebar layout · после входа в конкретную организацию">
+          <DCArtboard id="dashboard" label="07 · Дашборд организации" width={W} height={H}>
+            <OrgDashboardScreen />
+          </DCArtboard>
+          <DCArtboard id="employees" label="08 · Сотрудники" width={W} height={H}>
+            <EmployeesScreen />
+          </DCArtboard>
+          <DCArtboard id="emp-detail" label="09 · Карточка сотрудника" width={W} height={H}>
+            <EmployeeDetailScreen />
+          </DCArtboard>
+          <DCArtboard id="services" label="10 · Услуги" width={W} height={H}>
+            <ServicesScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="bookings" title="Бронирования" subtitle="Управление записями клиентов">
+          <DCArtboard id="bookings-list" label="11 · Список бронирований" width={W} height={H}>
+            <BookingsScreen />
+          </DCArtboard>
+          <DCArtboard id="booking-detail" label="12 · Карточка бронирования" width={W} height={H}>
+            <BookingDetailScreen />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="scanner" title="Сканер QR" subtitle="Три состояния — сканирование, успех, ошибка">
+          <DCArtboard id="scan-scanning" label="13a · Сканирование" width={SCAN_W} height={SCAN_H}>
+            <ScannerScanningScreen />
+          </DCArtboard>
+          <DCArtboard id="scan-success" label="13b · Визит подтверждён" width={SCAN_W} height={SCAN_H}>
+            <ScannerSuccessScreen />
+          </DCArtboard>
+          <DCArtboard id="scan-error" label="13c · Ошибка QR" width={SCAN_W} height={SCAN_H}>
+            <ScannerErrorScreen />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
