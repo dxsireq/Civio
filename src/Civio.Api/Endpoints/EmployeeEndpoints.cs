@@ -19,6 +19,9 @@ public static class EmployeeEndpoints
         group.MapGet("/{id:guid}", GetEmployeeByIdAsync);
         group.MapPut("/{id:guid}", UpdateEmployeeAsync);
         group.MapDelete("/{id:guid}", DeactivateEmployeeAsync);
+        group.MapGet("/{id:guid}/services", GetEmployeeServicesAsync);
+        group.MapPost("/{id:guid}/services/{serviceId:guid}", AssignServiceAsync);
+        group.MapDelete("/{id:guid}/services/{serviceId:guid}", UnassignServiceAsync);
 
         return app;
     }
@@ -95,6 +98,50 @@ public static class EmployeeEndpoints
 
         await employeeService.DeactivateAsync(id, orgId, userId, cancellationToken);
 
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> GetEmployeeServicesAsync(
+        Guid orgId,
+        Guid id,
+        ClaimsPrincipal user,
+        IEmployeeService employeeService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        var services = await employeeService.GetServicesAsync(id, orgId, userId, cancellationToken);
+        return Results.Ok(services);
+    }
+
+    private static async Task<IResult> AssignServiceAsync(
+        Guid orgId,
+        Guid id,
+        Guid serviceId,
+        ClaimsPrincipal user,
+        IEmployeeService employeeService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        await employeeService.AssignServiceAsync(id, orgId, serviceId, userId, cancellationToken);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> UnassignServiceAsync(
+        Guid orgId,
+        Guid id,
+        Guid serviceId,
+        ClaimsPrincipal user,
+        IEmployeeService employeeService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        await employeeService.UnassignServiceAsync(id, orgId, serviceId, userId, cancellationToken);
         return Results.NoContent();
     }
 

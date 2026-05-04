@@ -1,4 +1,5 @@
 using Civio.Contracts.Employees;
+using Civio.Contracts.Services;
 
 namespace Civio.Application.Employees;
 
@@ -30,6 +31,26 @@ public interface IEmployeeService
 
     Task DeactivateAsync(
         Guid id,
+        Guid organizationId,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default);
+
+    Task AssignServiceAsync(
+        Guid employeeId,
+        Guid organizationId,
+        Guid serviceId,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default);
+
+    Task UnassignServiceAsync(
+        Guid employeeId,
+        Guid organizationId,
+        Guid serviceId,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ServiceResponse>> GetServicesAsync(
+        Guid employeeId,
         Guid organizationId,
         Guid requestingUserId,
         CancellationToken cancellationToken = default);
