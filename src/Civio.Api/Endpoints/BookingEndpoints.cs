@@ -3,6 +3,7 @@ using Civio.Application.Bookings;
 using Civio.Contracts.Bookings;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace Civio.Api.Endpoints;
 
 public static class BookingEndpoints
@@ -17,6 +18,8 @@ public static class BookingEndpoints
         bookings.MapPost("/", CreateBookingAsync);
         bookings.MapGet("/my", GetMyBookingsAsync);
         bookings.MapGet("/{id:guid}", GetBookingByIdAsync);
+        bookings.MapGet("/{id:guid}/qr", GetBookingQrAsync);
+        bookings.MapPost("/scan", ScanQrAsync);
         bookings.MapPost("/{id:guid}/cancel", CancelBookingAsync);
         bookings.MapPost("/{id:guid}/confirm", ConfirmBookingAsync);
         bookings.MapPost("/{id:guid}/reject", RejectBookingAsync);
@@ -66,6 +69,32 @@ public static class BookingEndpoints
 
         var booking = await bookingService.GetByIdAsync(id, userId, cancellationToken);
         return Results.Ok(booking);
+    }
+
+    private static async Task<IResult> GetBookingQrAsync(
+        Guid id,
+        ClaimsPrincipal user,
+        IBookingService bookingService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        var qr = await bookingService.GetQrAsync(id, userId, cancellationToken);
+        return Results.Ok(qr);
+    }
+
+    private static async Task<IResult> ScanQrAsync(
+        ClaimsPrincipal user,
+        [FromBody] ScanQrRequest request,
+        IBookingService bookingService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        var result = await bookingService.ScanAsync(request, userId, cancellationToken);
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> CancelBookingAsync(

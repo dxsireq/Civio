@@ -49,28 +49,4 @@ public sealed class JwtTokenGenerator : IJwtTokenGenerator
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerateBookingQrToken(Guid bookingId, Guid citizenId, DateTimeOffset expiresAt)
-    {
-        var claims = new List<Claim>
-        {
-            new("booking_id", bookingId.ToString()),
-            new("citizen_id", citizenId.ToString())
-        };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_options.Secret));
-
-        var credentials = new SigningCredentials(
-            key,
-            SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
-            expires: expiresAt.UtcDateTime,
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
 }

@@ -1,4 +1,4 @@
-using Civio.Application.Auth;
+using System.Security.Cryptography;
 using Civio.Application.Bookings;
 using Civio.Application.Slots;
 using Civio.Contracts.Bookings;
@@ -12,16 +12,13 @@ namespace Civio.Infrastructure.Bookings;
 public sealed class BookingService : IBookingService
 {
     private readonly AppDbContext _dbContext;
-    private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly SlotCalculationService _slotCalculator;
 
     public BookingService(
         AppDbContext dbContext,
-        IJwtTokenGenerator jwtTokenGenerator,
         SlotCalculationService slotCalculator)
     {
         _dbContext = dbContext;
-        _jwtTokenGenerator = jwtTokenGenerator;
         _slotCalculator = slotCalculator;
     }
 
@@ -139,10 +136,7 @@ public sealed class BookingService : IBookingService
 
         _dbContext.Bookings.Add(booking);
 
-        var qrToken = _jwtTokenGenerator.GenerateBookingQrToken(
-            booking.Id,
-            citizenId,
-            expiresAt: startAtUtc.AddDays(1));
+        var qrToken = GenerateQrToken();
 
         var qrCode = new BookingQrCode
         {
@@ -332,6 +326,90 @@ public sealed class BookingService : IBookingService
         return await ChangeStatusAsync(booking, "completed", requestingUserId, cancellationToken);
     }
 
+    public async Task<BookingQrResponse> GetQrAsync(
+        Guid bookingId,
+        Guid citizenId,
+        CancellationToken cancellationToken = default)
+    {
+        var qrCode = await _dbContext.BookingQrCodes
+            .AsNoTracking()
+            .Include(q => q.Booking)
+            .FirstOrDefaultAsync(q => q.BookingId == bookingId, cancellationToken);
+
+        if (qrCode is null)
+            throw new KeyNotFoundException($"QR code for booking {bookingId} not found.");
+
+        if (qrCode.Booking.CitizenId != citizenId)
+            throw new UnauthorizedAccessException("Access denied.");
+
+        return new BookingQrResponse(bookingId, qrCode.Token);
+    }
+
+    public async Task<ScanQrResponse> ScanAsync(
+        ScanQrRequest request,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var qrCode = await _dbContext.BookingQrCodes
+            .Include(q => q.Booking)
+                .ThenInclude(b => b.Service)
+            .Include(q => q.Booking)
+                .ThenInclude(b => b.Citizen)
+            .Include(q => q.Booking)
+                .ThenInclude(b => b.Status)
+            .Include(q => q.Booking)
+                .ThenInclude(b => b.Slot)
+            .FirstOrDefaultAsync(q => q.Token == request.Token, cancellationToken);
+
+        if (qrCode is null)
+            throw new KeyNotFoundException("QR code not found.");
+
+        if (qrCode.ExpiresAt.HasValue && qrCode.ExpiresAt.Value < DateTimeOffset.UtcNow)
+            throw new InvalidOperationException("QR code has expired.");
+
+        if (qrCode.UsedAt.HasValue)
+            throw new InvalidOperationException("QR code has already been used.");
+
+        var booking = qrCode.Booking;
+
+        if (booking.Status.Code != "confirmed")
+            throw new InvalidOperationException($"Cannot check in booking with status '{booking.Status.Code}'.");
+
+        await RequireOrgAccessAsync(booking, requestingUserId, cancellationToken);
+
+        var completedStatus = await _dbContext.BookingStatuses
+            .AsNoTracking()
+            .FirstAsync(s => s.Code == "completed", cancellationToken);
+
+        var history = new BookingStatusHistory
+        {
+            Id = Guid.NewGuid(),
+            BookingId = booking.Id,
+            OldStatusId = booking.StatusId,
+            NewStatusId = completedStatus.Id,
+            ChangedById = requestingUserId,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        _dbContext.BookingStatusHistory.Add(history);
+
+        qrCode.UsedAt = DateTimeOffset.UtcNow;
+        booking.StatusId = completedStatus.Id;
+        booking.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return new ScanQrResponse(
+            booking.Id,
+            booking.Citizen.FirstName,
+            booking.Citizen.LastName,
+            booking.Service.Name,
+            booking.Slot?.StartAt ?? booking.CreatedAt,
+            booking.Slot?.EndAt ?? booking.CreatedAt,
+            completedStatus.Code,
+            completedStatus.Name);
+    }
+
     private async Task<Booking> LoadBookingForUpdateAsync(Guid bookingId, CancellationToken cancellationToken)
     {
         var booking = await _dbContext.Bookings
@@ -392,6 +470,12 @@ public sealed class BookingService : IBookingService
 
         return ToResponse(booking);
     }
+
+    private static string GenerateQrToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .Replace("+", "-")
+            .Replace("/", "_")
+            .TrimEnd('=');
 
     private static BookingResponse ToResponse(Booking b) =>
         new(

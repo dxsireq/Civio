@@ -4,6 +4,16 @@ namespace Civio.Application.Bookings;
 
 public interface IBookingService
 {
+    Task<BookingQrResponse> GetQrAsync(
+        Guid bookingId,
+        Guid citizenId,
+        CancellationToken cancellationToken = default);
+
+    Task<ScanQrResponse> ScanAsync(
+        ScanQrRequest request,
+        Guid requestingUserId,
+        CancellationToken cancellationToken = default);
+
     Task<BookingResponse> CreateAsync(
         Guid citizenId,
         CreateBookingRequest request,

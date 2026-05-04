@@ -2,14 +2,7 @@
 
 ## QR-коды
 
-- [ ] `GET /api/bookings/{id}/qr` — QR (токен), только владелец
-- [ ] `POST /api/bookings/scan` — валидация при сканировании
-  - найти по token
-  - проверить expires_at > UtcNow
-  - проверить booking.status = `confirmed`
-  - записать used_at
-  - вернуть данные
-
+- [ ] изменить вывод scan endpoint
 ---
 
 ## Notifications (минимум для диплома)
@@ -31,7 +24,7 @@
 
 ## Демо
 
-- [ ] Postman collection, end-to-end сценарий:
+- end-to-end сценарий:
   1. Регистрация owner
   2. Создание организации
   3. Создание сотрудника
@@ -97,3 +90,10 @@
 - [x] `POST /api/bookings/{id}/reject` — отклонить, статус → `rejected`
 - [x] `POST /api/bookings/{id}/complete` — завершить, статус → `completed`
 - [x] Все смены статуса → `booking_status_history`
+- [x] `GET /api/bookings/{id}/qr` — QR (токен), только владелец
+- [x] `POST /api/bookings/scan` — валидация при сканировании
+  - найти по token
+  - проверить expires_at > UtcNow
+  - проверить booking.status = `confirmed`
+  - записать used_at
+  - вернуть данные
