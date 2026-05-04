@@ -1,193 +1,129 @@
 # Контекст проекта Civio
 
-## Что реализовано
+## Реализованный функционал
 
 ### Auth (`/api/auth`)
-| Endpoint | Статус |
+| Endpoint | Описание |
 |---------|--------|
-| `POST /register` | ✅ |
-| `POST /login` | ✅ |
-| `GET /me` | ✅ |
+| `POST /register` | Регистрация, роль `Citizen` по умолчанию |
+| `POST /login` | JWT токен с ролями |
+| `GET /me` | Текущий пользователь + роли |
 
-Детали: JWT, `PasswordHasher`, роли из БД, Swagger Bearer.
+JWT: `PasswordHasher`, роли из `user_roles`, `MapInboundClaims = true`, `RoleClaimType` mapped.
 
 ---
 
 ### Organizations (`/api/organizations`)
-| Endpoint | Статус |
+| Endpoint | Доступ |
 |---------|--------|
-| `POST /` | ✅ |
-| `GET /my` | ❌ |
-| `GET /{id}` | ❌ |
+| `POST /` | Auth |
+| `GET /my` | Auth (owner) |
+| `GET /{id}` | Owner / Employee |
+| `PUT /{id}` | Owner only |
 
-Детали `POST`:
-- Только для авторизованных
-- `owner_user_id` берётся из JWT (`ClaimTypes.NameIdentifier`)
-- Статус по умолчанию = `"pending"` (через таблицу `organization_statuses`)
-- Валидация: name required, trim, ограничение длины
-- Возвращает DTO, не Entity
+Создаётся со статусом `pending`. Статус меняет только PlatformAdmin через `/api/admin`.
 
 ---
 
-### Infrastructure
-- `AppDbContext` настроен, конфигурации синхронизированы с БД
-- PostgreSQL через Docker работает
-- `AddInfrastructure()` зарегистрирован
+### Employees (`/api/organizations/{orgId}/employees`)
+| Endpoint | Доступ |
+|---------|--------|
+| `POST /` | Owner |
+| `GET /` | Owner / Employee |
+| `GET /{id}` | Owner / Employee |
+| `PUT /{id}` | Owner |
+| `DELETE /{id}` | Owner (soft: `is_active = false`) |
+| `GET /{id}/services` | Owner / Employee |
+| `POST /{id}/services/{serviceId}` | Owner — привязать услугу |
+| `DELETE /{id}/services/{serviceId}` | Owner — отвязать услугу |
+
+`user_id` nullable — сотрудник может не быть зарегистрирован в системе.
+`employee_services` **не создаётся автоматически** при создании сотрудника — нужна явная привязка.
 
 ---
 
-## Принятые архитектурные решения
-
-### Модель доступа: Owner vs Employee
-
-Две роли внутри организации — без отдельных таблиц ролей.
-
-**Owner** определяется через `organizations.owner_user_id` — не через `employees`.
-**Employee** — запись в `employees.user_id`.
-
-```csharp
-public static class OrganizationAccess
-{
-    public static bool IsOwner(Guid userId, Organization org) =>
-        org.OwnerUserId == userId;
-
-    public static bool IsEmployee(Guid userId, Guid organizationId,
-        IEnumerable<Employee> employees) =>
-        employees.Any(e => e.UserId == userId && e.OrganizationId == organizationId);
-}
-```
-
-| Действие | Owner | Employee |
-|---------|-------|----------|
-| Управление организацией | ✅ | ❌ |
-| Управление сотрудниками | ✅ | ❌ |
-| Управление услугами | ✅ | ❌ |
-| Управление расписанием | ✅ | ✅ только своим |
-| Просмотр бронирований | ✅ | ✅ только своих |
-| Смена статуса бронирования | ✅ | ✅ только своих |
-
-**Почему не таблица ролей:** роли статичны, кастомизация не нужна. RBAC — позже, по требованию.
+### Services (`/api/organizations/{orgId}/services`)
+| Endpoint | Доступ |
+|---------|--------|
+| `POST /` | Owner |
+| `GET /` | Публично |
+| `PUT /{id}` | Owner |
+| `DELETE /{id}` | Owner (soft: `is_active = false`) |
 
 ---
 
-### Расписание и слоты
+### Schedule
+| Endpoint | Доступ |
+|---------|--------|
+| `POST /api/employees/{id}/work-days` | Owner / Employee |
+| `GET /api/employees/{id}/work-days` | Owner / Employee |
+| `PUT /api/employees/{id}/work-days/{wdId}` | Owner / Employee |
+| `DELETE /api/employees/{id}/work-days/{wdId}` | Owner / Employee |
+| `POST /api/employees/{id}/schedule-templates` | Owner / Employee |
+| `GET /api/organizations/{id}/available-slots?serviceId=&date=` | Публично |
 
-**Подход: on-demand вычисление, без pre-generated slots.**
-
-`work_days` = источник правды о рабочем времени сотрудника.
-Свободные окна вычисляются при запросе — `work_days` минус существующие `bookings`.
-`booking_slots` создаётся **только при бронировании** как фиксация занятого времени.
-
-```
-GET /available-slots:
-  взять work_days сотрудника на дату
-  вычесть bookings на это время
-  вернуть окна кратные duration_minutes услуги
-```
-
-```csharp
-public IReadOnlyList<TimeSlot> GetAvailableSlots(
-    WorkDay workDay,
-    IEnumerable<Booking> existingBookings,
-    int serviceDurationMinutes)
-{
-    var slots = new List<TimeSlot>();
-    var current = workDay.StartTime;
-    var end = workDay.EndTime;
-    var duration = TimeSpan.FromMinutes(serviceDurationMinutes);
-
-    while (current + duration <= end)
-    {
-        // пропускаем перерыв
-        if (workDay.BreakStart.HasValue &&
-            current < workDay.BreakEnd &&
-            current + duration > workDay.BreakStart)
-        {
-            current = workDay.BreakEnd!.Value;
-            continue;
-        }
-
-        var isFree = !existingBookings.Any(b =>
-            b.StartAt < current + duration && b.EndAt > current);
-
-        if (isFree)
-            slots.Add(new TimeSlot(current, current + duration));
-
-        current += duration;
-    }
-
-    return slots;
-}
-```
-
-**Race condition** — `SELECT FOR UPDATE` в транзакции бронирования:
-
-```csharp
-await _db.Database.ExecuteSqlRawAsync(
-    "SELECT id FROM work_days WHERE id = {0} FOR UPDATE", workDayId);
-// после этого — проверка доступности и создание booking
-```
-
-**Приоритет при конфликте break:** `work_days.break_start/end` имеет приоритет над `schedule_templates`. Шаблон — заготовка, рабочий день — факт.
+Слоты вычисляются on-demand: `work_days` минус `booking_slots`, окна кратные `duration_minutes`.
+Только сотрудники с `employee_services` для данной услуги попадают в результат.
 
 ---
 
-### QR-код бронирования
+### Bookings (`/api/bookings`)
+| Endpoint | Доступ |
+|---------|--------|
+| `POST /` | Auth (Citizen) |
+| `GET /my` | Auth (Citizen) |
+| `GET /{id}` | Citizen-владелец / Org member |
+| `POST /{id}/cancel` | Citizen-владелец |
+| `POST /{id}/confirm` | Org member |
+| `POST /{id}/reject` | Org member |
+| `POST /{id}/complete` | Org member |
+| `GET /{id}/qr` | Citizen-владелец |
+| `POST /scan` | Org member |
+| `GET /api/organizations/{id}/bookings` | Owner / Employee |
 
-Токен = подписанная строка: `{ bookingId, userId, expiresAt }`.
-Валидация при сканировании — один endpoint, проверяет подпись + статус бронирования.
+При создании: `SELECT FOR UPDATE` на `work_days`, двойная проверка слота, создаёт `booking_slot` + `booking_qr_code`.
+При каждой смене статуса → `booking_status_history` + `notifications`.
 
-```csharp
-// При создании бронирования
-var token = GenerateToken(booking.Id, userId, expiresAt);
-_db.BookingQrCodes.Add(new BookingQrCode
-{
-    BookingId = booking.Id,
-    Token = token,
-    ExpiresAt = expiresAt
-});
-
-// При сканировании (POST /bookings/scan):
-// 1. Найти запись по token
-// 2. Проверить expires_at > UtcNow
-// 3. Проверить booking.status = 'confirmed'
-// 4. Записать used_at = UtcNow
-```
-
----
-
-## Что не реализовано (приоритет)
-
-### Ближайшие задачи
-
-**`GET /api/organizations/my`**
-- список организаций текущего пользователя
-- `owner_user_id` из JWT, `AsNoTracking()`
-
-**`GET /api/organizations/{id}`**
-- доступ: owner или employee организации
-- `403` если нет доступа
-
-**End-to-end сценарий бронирования**
-Минимум для демо:
-1. Owner создаёт организацию + услугу + рабочий день сотрудника
-2. Клиент запрашивает доступные слоты
-3. Клиент создаёт бронирование
-4. Сотрудник меняет статус на `confirmed`
-5. Генерируется QR-код
+#### QR-код
+Токен = CSPRNG base64url (32 байта, URL-safe). Не JWT.
+`POST /scan` проверяет: `expires_at > now`, `used_at == null`, `status == confirmed`, org access.
+При успехе: `used_at = now`, статус → `completed`.
 
 ---
 
-### Будущие модули
-- Schedules / Slots (расписание, генерация слотов)
-- Bookings (записи на услуги)
-- Notifications (push + email через FCM)
-- Employees (управление сотрудниками)
-- Services (услуги организации)
+### Notifications (`/api/notifications`)
+| Endpoint | Доступ |
+|---------|--------|
+| `GET /my` | Auth |
 
-### Auth
-- Refresh tokens — не реализованы
-- Server-side logout — не реализован
+Уведомление создаётся при каждой смене статуса бронирования (`created/confirmed/cancelled/completed`). `rejected` — без уведомления (нет типа в seed).
+Email через `System.Net.Mail.SmtpClient`. Конфиг в `.env` (`Email__*` переменные). Если `Host/Username/From` пусты — только запись в DB.
+
+---
+
+### Admin (`/api/admin/organizations`)
+| Endpoint | Доступ |
+|---------|--------|
+| `GET /` | PlatformAdmin |
+| `POST /{id}/approve` | PlatformAdmin |
+| `POST /{id}/reject` | PlatformAdmin |
+| `POST /{id}/block` | PlatformAdmin |
+
+Каждое действие → запись в `organization_moderation_history`. Body: `{ "comment": "..." }` (опционально).
+Роль `PlatformAdmin` назначается вручную через `user_roles` в БД.
+
+---
+
+## Архитектурные решения
+
+### QR токен
+Изменён с JWT на opaque CSPRNG: `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))` с URL-safe заменой символов. Причина: меньше QR, токен не раскрывает данные, одноразовость через `used_at`.
+
+### .env загрузка
+`DotNetEnv.Env.TraversePath().Load()` вызывается до `WebApplication.CreateBuilder`. Traverse ищет `.env` от рабочей директории вверх до корня репо. Переменные с `__` как разделитель секций (`Email__Host` → `Email:Host`).
+
+### JWT роли
+`MapInboundClaims = true` явно в `AddJwtBearer`. В .NET 10 дефолт мог поменяться → `role` не маппился в `ClaimTypes.Role` → `RequireRole` не работал. Named policy `"PlatformAdmin"` зарегистрирована в `AddAuthorization`.
 
 ---
 
@@ -195,14 +131,28 @@ _db.BookingQrCodes.Add(new BookingQrCode
 
 | Проблема | Приоритет |
 |---------|-----------|
-| Нет централизованного error handling middleware | Высокий |
-| Нет end-to-end сценария для демонстрации | Высокий |
-| Нет rate limiting | Средний |
-| Нет unit/integration тестов | Средний |
 | JWT без refresh tokens | Средний |
-| Валидация частично в сервисах | Низкий |
-| Нет CQRS / read-write разделения | Низкий |
-| Нет caching слоя | Низкий |
+| Нет unit/integration тестов | Средний |
+| Нет rate limiting | Низкий |
+| `System.Net.Mail.SmtpClient` deprecated | Низкий (заменить на MailKit) |
+| `DependecyInjection.cs` — опечатка в имени файла | Низкий |
+
+---
+
+## e2e сценарий (все шаги реализованы)
+
+1. `POST /api/auth/register` — owner
+2. `POST /api/organizations` — создать org (статус `pending`)
+3. `POST /api/organizations/{id}/employees` — создать сотрудника
+4. `POST /api/organizations/{id}/services` — создать услугу
+5. `POST /api/organizations/{orgId}/employees/{id}/services/{serviceId}` — привязать услугу к сотруднику ⚠️ обязательно
+6. `POST /api/employees/{id}/work-days` — создать рабочий день
+7. `POST /api/auth/register` — клиент
+8. `GET /api/organizations/{id}/available-slots?serviceId=&date=` — получить слоты
+9. `POST /api/bookings` — создать бронирование
+10. `POST /api/bookings/{id}/confirm` — подтвердить (owner/employee)
+11. `GET /api/bookings/{id}/qr` — получить токен QR
+12. `POST /api/bookings/scan` — сканирование → статус `completed`
 
 ---
 
@@ -210,17 +160,15 @@ _db.BookingQrCodes.Add(new BookingQrCode
 
 Полная схема в `database/init.sql`.
 
-### Ключевые таблицы
-
 ```
 users                           — пользователи платформы
 roles                           — глобальные роли (Citizen, OrganizationEmployee, PlatformAdmin)
+user_roles                      — связь users ↔ roles
 organizations                   — организации (owner_user_id = владелец)
 organization_statuses           — pending, approved, rejected, blocked
 organization_moderation_history — история решений модератора
-branches                        — филиалы организации
-employees                       — сотрудники (user_id → связь с users, nullable)
-employee_services               — какие услуги оказывает сотрудник
+employees                       — сотрудники (user_id → nullable)
+employee_services               — какие услуги оказывает сотрудник (явная привязка)
 service_categories              — категории услуг
 services                        — услуги (duration_minutes определяет размер слота)
 schedule_templates              — шаблон расписания по дням недели
@@ -229,16 +177,14 @@ booking_slots                   — занятые интервалы (созд�
 booking_statuses                — created, confirmed, cancelled, rejected, completed
 bookings                        — бронирования
 booking_status_history          — история смены статусов
-booking_qr_codes                — токены QR-кодов
+booking_qr_codes                — токены QR-кодов  used_at)
 notifications                   — уведомления
 notification_types/channels/statuses — справочники
 device_push_tokens              — FCM токены устройств
 ```
 
 ### Важные решения по схеме
-- `booking_slots` — не pre-generated, создаются только при бронировании
-- `work_days.break_*` имеет приоритет над `schedule_templates.break_*`
-- `employees.user_id` nullable — сотрудник может быть не зарегистрирован в системе
-- Схема не меняется — решения на уровне логики приложения
-
-> При добавлении новых таблиц — только через `init.sql`. EF migrations не используются.
+`booking_slots` — не pre-generated, создаются только при бронировании
+`work_days.break_*` имеет приоритет над `schedule_templates.break_*`
+`employees.user_id` nullable — сотрудник может не быть зарегистрирован
+EF migrations не используются — только `init.sql`

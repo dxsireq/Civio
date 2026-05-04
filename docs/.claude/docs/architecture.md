@@ -34,6 +34,8 @@ app.MapPost("/api/organizations", async (
 app.MapPost("/api/organizations", async (AppDbContext db, ...) => { ... });
 ```
 
+Endpoints организованы в файлы `*Endpoints.cs`, подключаются через extension methods в `Program.cs`.
+
 **Коды ответов:**
 - `400` — ошибка валидации
 - `401` — не авторизован
@@ -45,36 +47,44 @@ app.MapPost("/api/organizations", async (AppDbContext db, ...) => { ... });
 
 ## Слой Application (`Civio.Application`)
 
-Интерфейсы сервисов + use-case логика.
+Интерфейсы сервисов. Логика use-case в Infrastructure-реализациях.
 
-```csharp
-public interface IOrganizationService
-{
-    Task<OrganizationResponse> CreateAsync(Guid ownerId, CreateOrganizationRequest request);
-    Task<OrganizationResponse?> GetByIdAsync(Guid id, Guid requesterId);
-    Task<IReadOnlyList<OrganizationResponse>> GetMyAsync(Guid ownerId);
-}
-```
+Пространства имён по доменам:
+- `Civio.Application.Auth` — `IAuthService`, `IJwtTokenGenerator`
+- `Civio.Application.Bookings` — `IBookingService`
+- `Civio.Application.Organizations` — `IOrganizationService`
+- `Civio.Application.Employees` — `IEmployeeService`
+- `Civio.Application.Services` — `IServiceService`
+- `Civio.Application.Schedule` — `IWorkDayService`, `IScheduleTemplateService`
+- `Civio.Application.Slots` — `IAvailableSlotsService`, `SlotCalculationService`
+- `Civio.Application.Notifications` — `INotificationService`, `IEmailSender`
+- `Civio.Application.Admin` — `IAdminService`
 
 ---
 
 ## Слой Infrastructure (`Civio.Infrastructure`)
 
-Реализует интерфейсы `Application`. Содержит `AppDbContext`, Fluent configurations, сервисы.
+Реализует интерфейсы `Application`. Содержит `AppDbContext`, конфигурации EF, сервисы.
 
-**Регистрация зависимостей — только здесь:**
+**Регистрация зависимостей — только здесь** (`DependecyInjection.cs`, опечатка намеренно сохранена):
 
 ```csharp
-// Infrastructure/DependencyInjection.cs
 public static IServiceCollection AddInfrastructure(
     this IServiceCollection services,
     IConfiguration configuration)
 {
     services.AddDbContext<AppDbContext>(...);
+    services.Configure<EmailOptions>(configuration.GetSection("Email"));
+    services.AddScoped<IEmailSender, SmtpEmailSender>();
+    services.AddScoped<INotificationService, NotificationService>();
+    services.AddScoped<IAdminService, AdminService>();
     services.AddScoped<IOrganizationService, OrganizationService>();
+    // ...остальные сервисы
     return services;
 }
 ```
+
+**Все EF-конфигурации** в одном файле: `Persistence/Configurations/CivioEntityConfigurations.cs` (~674 строки, 25 sealed классов, `ApplyConfigurationsFromAssembly`).
 
 ---
 
@@ -125,6 +135,20 @@ _dbContext.Entry(entity).Property(e => e.IsActive).IsModified = true;
 await _dbContext.SaveChangesAsync(cancellationToken);
 ```
 
+### Конфликт имён: EmployeeService
+
+`Civio.Infrastructure.Employees.EmployeeService` (класс сервиса) конфликтует с `Civio.Domain.Entities.EmployeeService` (join-entity).
+
+При создании `employee_services` записи использовать полный namespace:
+
+```csharp
+_dbContext.EmployeeServices.Add(new Domain.Entities.EmployeeService
+{
+    EmployeeId = employeeId,
+    ServiceId = serviceId
+});
+```
+
 ---
 
 ## Модель доступа
@@ -136,12 +160,62 @@ Owner и Employee без отдельных таблиц ролей:
 bool isOwner = org.OwnerUserId == currentUserId;
 
 // Employee — через наличие записи в employees
-bool isEmployee = await _db.Employees
-    .AsNoTracking()
-    .AnyAsync(e => e.UserId == currentUserId && e.OrganizationId == orgId);
+bool isEmployee = employees.Any(e => e.UserId == userId && e.OrganizationId == orgId);
 ```
 
-Матрица прав — в `project-context.md`.
+`OrganizationAccess` static helper в `Civio.Domain.Authorization`. Матрица прав — в `project-context.md`.
+
+---
+
+## Уведомления
+
+`INotificationService.NotifyBookingStatusChangedAsync` вызывается из `BookingService` после каждой смены статуса. Маппинг: `created/confirmed/cancelled/completed` → тип уведомления. `rejected` — пропускается.
+
+```
+NotificationService:
+  1. Найти тип по коду (если нет — return)
+  2. Загрузить email channel + created status + user.Email
+  3. Сохранить Notification в DB
+  4. Вызвать IEmailSender.SendAsync
+  5. Обновить статус → sent / failed
+```
+
+`SmtpEmailSender` использует `System.Net.Mail.SmtpClient`. Если `Host/Username/From` пусты — логирует и пропускает без исключения.
+
+---
+
+## Конфигурация
+
+`.env` в корне репо (в `.gitignore`). Загружается через `DotNetEnv.Env.TraversePath().Load()` до `CreateBuilder`.
+
+```
+Email__Host=smtp.gmail.com
+Email__Port=587
+Email__Username=...
+Email__Password=...   # Gmail App Password
+Email__From=...
+Email__EnableSsl=true
+```
+
+---
+
+## JWT и авторизация
+
+```csharp
+options.MapInboundClaims = true;  // явно — в .NET 10 дефолт ненадёжен
+```
+
+Named policy для admin endpoints:
+```csharp
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("PlatformAdmin", policy => policy.RequireRole("PlatformAdmin"));
+});
+```
+
+Endpoint группа: `.RequireAuthorization("PlatformAdmin")`.
+
+Роль `PlatformAdmin` назначается вручную через `user_roles` — регистрация всегда даёт `Citizen`.
 
 ---
 
@@ -173,24 +247,16 @@ var now = DateTime.UtcNow;
 
 ## Nullable
 
-Nullable только если поле реально может отсутствовать:
-
-```csharp
-// ❌ Если поле обязательно
-public Guid? OwnerUserId { get; set; }
-
-// ✅
-public Guid OwnerUserId { get; set; }
-```
+Nullable только если поле реально может отсутствовать.
 
 ---
 
-## Как добавить новый модуль (пример: Bookings)
+## Как добавить новый модуль
 
-1. **Domain:** `Booking.cs` в `Civio.Domain/Entities/`
-2. **Infrastructure:** `BookingConfiguration.cs` (Fluent API), `DbSet<Booking>` в `AppDbContext`
-3. **Contracts:** `CreateBookingRequest.cs` + `BookingResponse.cs`
-4. **Application:** `IBookingService.cs`
-5. **Infrastructure:** `BookingService.cs`, зарегистрировать в `AddInfrastructure()`
-6. **Api:** `BookingEndpoints.cs`, подключить в `Program.cs`
-7. **БД:** добавить таблицу в `database/init.sql`
+1. **Domain:** `Entity.cs` в `Civio.Domain/Entities/`
+2. **Infrastructure:** конфигурация в `CivioEntityConfigurations.cs`, `DbSet<T>` в `AppDbContext`
+3. **Contracts:** `CreateRequest.cs` + `Response.cs`
+4. **Application:** `IService.cs`
+5. **Infrastructure:** `Service.cs`, зарегистрировать в `DependecyInjection.cs`
+6. **Api:** `Endpoints.cs`, подключить в `Program.cs`
+7. **БД:** таблица в `database/init.sql` (migrations не используются)
