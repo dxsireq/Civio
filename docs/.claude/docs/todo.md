@@ -5,14 +5,6 @@
 - [ ] изменить вывод scan endpoint
 ---
 
-## Notifications (минимум для диплома)
-
-- [x] Запись в `notifications` при каждой смене статуса
-- [x] `GET /api/notifications/my` — уведомления юзера
-- [x] email уведомления 
-
----
-
 ## Moderation (Admin)
 
 - [ ] `GET /api/admin/organizations` — все организации, только PlatformAdmin
@@ -97,3 +89,6 @@
   - проверить booking.status = `confirmed`
   - записать used_at
   - вернуть данные
+- [x] Запись в `notifications` при каждой смене статуса
+- [x] `GET /api/notifications/my` — уведомления юзера
+- [x] email уведомления

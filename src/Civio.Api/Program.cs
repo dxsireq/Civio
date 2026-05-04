@@ -73,9 +73,13 @@ builder.Services
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+        options.MapInboundClaims = true;
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("PlatformAdmin", policy => policy.RequireRole("PlatformAdmin"));
+});
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
@@ -158,6 +162,7 @@ app.MapScheduleTemplateEndpoints();
 app.MapSlotsEndpoints();
 app.MapBookingEndpoints();
 app.MapNotificationEndpoints();
+app.MapAdminEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();
