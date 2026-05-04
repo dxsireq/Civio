@@ -1,11 +1,13 @@
 using Civio.Application.Bookings;
 using Civio.Application.Employees;
+using Civio.Application.Notifications;
 using Civio.Application.Organizations;
 using Civio.Application.Schedule;
 using Civio.Application.Services;
 using Civio.Application.Slots;
 using Civio.Infrastructure.Bookings;
 using Civio.Infrastructure.Employees;
+using Civio.Infrastructure.Notifications;
 using Civio.Infrastructure.Organizations;
 using Civio.Infrastructure.Persistence;
 using Civio.Infrastructure.Schedule;
@@ -28,6 +30,10 @@ public static class DependencyInjection
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"));
         });
+
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IEmployeeService, EmployeeService>();

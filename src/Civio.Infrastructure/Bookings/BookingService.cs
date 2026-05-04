@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Civio.Application.Bookings;
+using Civio.Application.Notifications;
 using Civio.Application.Slots;
 using Civio.Contracts.Bookings;
 using Civio.Domain.Authorization;
@@ -13,13 +14,16 @@ public sealed class BookingService : IBookingService
 {
     private readonly AppDbContext _dbContext;
     private readonly SlotCalculationService _slotCalculator;
+    private readonly INotificationService _notificationService;
 
     public BookingService(
         AppDbContext dbContext,
-        SlotCalculationService slotCalculator)
+        SlotCalculationService slotCalculator,
+        INotificationService notificationService)
     {
         _dbContext = dbContext;
         _slotCalculator = slotCalculator;
+        _notificationService = notificationService;
     }
 
     public async Task<BookingResponse> CreateAsync(
@@ -163,6 +167,9 @@ public sealed class BookingService : IBookingService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        await _notificationService.NotifyBookingStatusChangedAsync(
+            citizenId, booking.Id, "created", service.Name, bookingSlot.StartAt, cancellationToken);
 
         return new BookingResponse(
             booking.Id,
@@ -399,6 +406,10 @@ public sealed class BookingService : IBookingService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        await _notificationService.NotifyBookingStatusChangedAsync(
+            booking.CitizenId, booking.Id, "completed",
+            booking.Service.Name, booking.Slot?.StartAt, cancellationToken);
+
         return new ScanQrResponse(
             booking.Id,
             booking.Citizen.FirstName,
@@ -467,6 +478,10 @@ public sealed class BookingService : IBookingService
         booking.UpdatedAt = DateTimeOffset.UtcNow;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _notificationService.NotifyBookingStatusChangedAsync(
+            booking.CitizenId, booking.Id, newStatusCode,
+            booking.Service?.Name ?? string.Empty, booking.Slot?.StartAt, cancellationToken);
 
         return ToResponse(booking);
     }

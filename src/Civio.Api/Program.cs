@@ -9,9 +9,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Civio.Api.Endpoints;
+
 using Civio.Api.Middleware;
 using Civio.Infrastructure;
 
+
+DotNetEnv.Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -154,6 +157,7 @@ app.MapWorkDayEndpoints();
 app.MapScheduleTemplateEndpoints();
 app.MapSlotsEndpoints();
 app.MapBookingEndpoints();
+app.MapNotificationEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

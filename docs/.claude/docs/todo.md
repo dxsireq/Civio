@@ -7,9 +7,9 @@
 
 ## Notifications (минимум для диплома)
 
-- [ ] Запись в `notifications` при каждой смене статуса
-- [ ] `GET /api/notifications/my` — уведомления юзера
-- [ ] email уведомления
+- [x] Запись в `notifications` при каждой смене статуса
+- [x] `GET /api/notifications/my` — уведомления юзера
+- [x] email уведомления 
 
 ---
 
