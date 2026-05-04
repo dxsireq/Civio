@@ -40,6 +40,7 @@ Swagger: `https://localhost:{port}/swagger`
 | `.claude/docs/architecture.md` | Clean Architecture конвенции, соглашения по коду |
 | `.claude/docs/project-context.md` | Текущее состояние, что реализовано, техдолг |
 | `.claude/docs/thesis-summary.md` | Доменная модель, бизнес-требования из диплома |
+| `.claude/docs/web-client-architecture.md` | Архитектура веб-клиента |
 
 ## Ключевые правила (не нарушать)
 
