@@ -9,7 +9,8 @@
 ## Web-клиент
 
 Стек: React + TypeScript + Vite (уже настроен).
-Добавить: React Router, Axios, Zustand (или Context), shadcn/ui + Tailwind, React Hook Form + Zod, jsQR (для сканера).
+Добавить: React Router, Axios, Zustand, Tailwind, shadcn/ui, React Hook Form + Zod, jsQR.
+Промпты для дизайна страниц: `docs/.claude/docs/design-prompts.md`
 
 ### Фаза 0 — Инфраструктура
 
@@ -23,91 +24,100 @@
 
 ---
 
-### Фаза 1 — Авторизация (общие страницы)
+### Фаза 1 — Авторизация
 
 - [ ] **Страница 1: Вход** `/login`
-  - Форма: email + password
-  - POST `/api/auth/login` → сохранить токен → редирект по роли
-  - Если `PlatformAdmin` → `/admin/organizations`, иначе → `/`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] Форма: email + password (React Hook Form + Zod)
+  - [ ] POST `/api/auth/login` → сохранить токен → редирект по роли
+  - [ ] Если `PlatformAdmin` → `/admin/organizations`, иначе → `/`
 
 - [ ] **Страница 2: Регистрация** `/register`
-  - Форма: email, password, firstName, lastName, phone (опц.)
-  - POST `/api/auth/register` → автологин → редирект на `/`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] Форма: email, password, firstName, lastName, phone (опц.)
+  - [ ] POST `/api/auth/register` → автологин → редирект на `/`
 
 ---
 
 ### Фаза 2 — Админ-панель
 
 - [ ] **Страница 3: Список организаций** `/admin/organizations`
-  - GET `/api/admin/organizations`
-  - Таблица: название, город, статус, дата создания
-  - Фильтр по статусу (pending / approved / rejected / blocked)
-  - Клик по строке → `/admin/organizations/{id}`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/admin/organizations`
+  - [ ] Таблица: название, город, статус, дата создания
+  - [ ] Фильтр по статусу (pending / approved / rejected / blocked)
+  - [ ] Клик по строке → `/admin/organizations/{id}`
 
 - [ ] **Страница 4: Карточка организации** `/admin/organizations/:id`
-  - Детали организации (все поля)
-  - Текущий статус + история модерации
-  - Кнопки действий: Одобрить / Отклонить / Заблокировать (с полем комментария)
-  - POST `/api/admin/organizations/{id}/approve|reject|block`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] Детали организации (все поля)
+  - [ ] Текущий статус + история модерации
+  - [ ] Кнопки действий: Одобрить / Отклонить / Заблокировать (с полем комментария)
+  - [ ] POST `/api/admin/organizations/{id}/approve|reject|block`
 
 ---
 
 ### Фаза 3 — Панель организации
 
-- [ ] **Страница 5: Мои организации** `/` (root для owner)
-  - GET `/api/organizations/my`
-  - Карточки организаций с статусом
-  - Кнопка «Создать организацию»
+- [ ] **Страница 5: Мои организации** `/`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/organizations/my`
+  - [ ] Карточки организаций с статусом
+  - [ ] Кнопка «Создать организацию»
 
 - [ ] **Страница 6: Создание организации** `/organizations/new`
-  - Форма: name, city, address, description, email, phone, website
-  - POST `/api/organizations` → редирект на `/organizations/{id}`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] Форма: name, city, address, description, email, phone, website
+  - [ ] POST `/api/organizations` → редирект на `/organizations/{id}`
 
 - [ ] **Страница 7: Дашборд организации** `/organizations/:id`
-  - Обзор: название, статус, контакты
-  - Навигация по разделам: Сотрудники / Услуги / Бронирования / Сканер QR
-  - PUT `/api/organizations/{id}` — редактирование inline или модалка
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/organizations/{id}` — данные org
+  - [ ] Навигация по разделам: Сотрудники / Услуги / Бронирования / Сканер QR
+  - [ ] PUT `/api/organizations/{id}` — редактирование (inline/модалка)
 
 - [ ] **Страница 8: Сотрудники** `/organizations/:id/employees`
-  - GET `/api/organizations/{id}/employees`
-  - Список сотрудников (имя, должность, статус)
-  - Форма создания: firstName, lastName, position, phone, email, userId (опц.)
-  - POST `/api/organizations/{id}/employees`
-  - Кнопка удалить (DELETE)
-  - Клик → `/organizations/{id}/employees/{empId}`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/organizations/{id}/employees`
+  - [ ] Список: имя, должность, статус
+  - [ ] POST `/api/organizations/{id}/employees` — форма создания
+  - [ ] DELETE `/api/organizations/{id}/employees/{empId}`
+  - [ ] Клик → `/organizations/{id}/employees/{empId}`
 
 - [ ] **Страница 9: Карточка сотрудника** `/organizations/:id/employees/:empId`
-  - Редактирование данных сотрудника (PUT)
-  - Секция «Услуги»: список привязанных услуг + добавить/удалить
-    - GET `/api/organizations/{id}/employees/{empId}/services`
-    - POST/DELETE `/api/organizations/{id}/employees/{empId}/services/{serviceId}`
-  - Секция «Рабочие дни»: список + форма создания
-    - GET/POST/PUT/DELETE `/api/employees/{empId}/work-days`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] Вкладка «Данные»: редактирование (PUT)
+  - [ ] Вкладка «Услуги»: список привязанных + добавить/удалить
+    - [ ] GET/POST/DELETE `/api/organizations/{id}/employees/{empId}/services/{serviceId}`
+  - [ ] Вкладка «Рабочие дни»: список + форма создания
+    - [ ] GET/POST/PUT/DELETE `/api/employees/{empId}/work-days`
 
 - [ ] **Страница 10: Услуги** `/organizations/:id/services`
-  - GET `/api/organizations/{id}/services`
-  - Список: название, длительность, цена, статус
-  - Форма создания/редактирования (inline или модалка)
-  - POST/PUT/DELETE
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/organizations/{id}/services`
+  - [ ] POST/PUT `/api/organizations/{id}/services` — форма создания/редактирования
+  - [ ] DELETE `/api/organizations/{id}/services/{serviceId}` — деактивация
 
 - [ ] **Страница 11: Бронирования** `/organizations/:id/bookings`
-  - GET `/api/organizations/{id}/bookings`
-  - Таблица: клиент, услуга, сотрудник, время, статус
-  - Фильтр по статусу
-  - Клик → `/organizations/{id}/bookings/{bookingId}`
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/organizations/{id}/bookings`
+  - [ ] Таблица: клиент, услуга, сотрудник, время, статус
+  - [ ] Фильтр по статусу
+  - [ ] Клик → `/organizations/{id}/bookings/{bookingId}`
 
 - [ ] **Страница 12: Карточка бронирования** `/organizations/:id/bookings/:bookingId`
-  - Детали: клиент, услуга, сотрудник, слот, статус
-  - История статусов
-  - Кнопки действий по статусу:
-    - `created` → Подтвердить / Отклонить
-    - `confirmed` → Завершить
+  - [ ] Вёрстка из файла дизайна
+  - [ ] GET `/api/bookings/{id}`
+  - [ ] История статусов
+  - [ ] Кнопки по статусу: confirm / reject / complete
+  - [ ] POST `/api/bookings/{id}/confirm|reject|complete`
 
 - [ ] **Страница 13: Сканер QR** `/organizations/:id/scan`
-  - Камера через `getUserMedia` + `jsQR`
-  - POST `/api/bookings/scan` с токеном
-  - Показать карточку визита: имя клиента, услуга, время
-  - Статус: успех / уже использован / истёк / не подтверждён
+  - [ ] Вёрстка из файла дизайна (3 состояния: сканирование / успех / ошибка)
+  - [ ] Камера через `getUserMedia` + `jsQR`
+  - [ ] POST `/api/bookings/scan` с токеном
+  - [ ] Показать карточку визита: имя клиента, услуга, время
+  - [ ] Обработка ошибок: уже использован / истёк / не подтверждён
 
 ---
 
