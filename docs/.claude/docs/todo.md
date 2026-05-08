@@ -14,42 +14,6 @@
 Добавить: React Router, Axios, Zustand, Tailwind, shadcn/ui, React Hook Form + Zod, jsQR.
 Промпты для дизайна страниц: `docs/.claude/docs/design-prompts.md`
 
-### Фаза 0 — Инфраструктура
-
-
-
----
-
-### Фаза 1 — Авторизация
-
-- [ ] **Страница 1: Вход** `/login`
-  - [ ] Вёрстка из файла дизайна
-  - [ ] Форма: email + password (React Hook Form + Zod)
-  - [ ] POST `/api/auth/login` → сохранить токен → редирект по роли
-  - [ ] Если `PlatformAdmin` → `/admin/organizations`, иначе → `/`
-
-- [ ] **Страница 2: Регистрация** `/register`
-  - [ ] Вёрстка из файла дизайна
-  - [ ] Форма: email, password, firstName, lastName, phone (опц.)
-  - [ ] POST `/api/auth/register` → автологин → редирект на `/`
-
----
-
-### Фаза 2 — Админ-панель
-
-- [ ] **Страница 3: Список организаций** `/admin/organizations`
-  - [ ] Вёрстка из файла дизайна
-  - [ ] GET `/api/admin/organizations`
-  - [ ] Таблица: название, город, статус, дата создания
-  - [ ] Фильтр по статусу (pending / approved / rejected / blocked)
-  - [ ] Клик по строке → `/admin/organizations/{id}`
-
-- [ ] **Страница 4: Карточка организации** `/admin/organizations/:id`
-  - [ ] Вёрстка из файла дизайна
-  - [ ] Детали организации (все поля)
-  - [ ] Текущий статус + история модерации
-  - [ ] Кнопки действий: Одобрить / Отклонить / Заблокировать (с полем комментария)
-  - [ ] POST `/api/admin/organizations/{id}/approve|reject|block`
 
 ---
 
@@ -345,3 +309,24 @@ e2e гражданина: регистрация → поиск организа
 - [x] `AdminRoute` — редирект если нет роли `PlatformAdmin`
 - [x] Layout компоненты: `AppLayout` (сайдбар + хедер), `AuthLayout` (центрированная форма)
 - [x] Глобальный error handler (toast уведомления)
+- [x] **Страница 1: Вход** `/login`
+  - [x] Вёрстка из файла дизайна
+  - [x] Форма: email + password (React Hook Form + Zod)
+  - [x] POST `/api/auth/login` → сохранить токен → редирект по роли
+  - [x] Если `PlatformAdmin` → `/admin/organizations`, иначе → `/`
+- [x] **Страница 2: Регистрация** `/register`
+  - [x] Вёрстка из файла дизайна
+  - [x] Форма: email, password, firstName, lastName, phone (опц.)
+  - [x] POST `/api/auth/register` → автологин → редирект на `/`
+- [x] **Страница 3: Список организаций** `/admin/organizations`
+  - [x] Вёрстка из файла дизайна
+  - [x] GET `/api/admin/organizations`
+  - [x] Таблица: название, город, статус, дата создания
+  - [x] Фильтр по статусу (pending / approved / rejected / blocked)
+  - [x] Клик по строке → `/admin/organizations/{id}`
+- [x] **Страница 4: Карточка организации** `/admin/organizations/:id`
+  - [x] Вёрстка из файла дизайна
+  - [x] Детали организации (все поля)
+  - [x] Текущий статус + история модерации
+  - [x] Кнопки действий: Одобрить / Отклонить / Заблокировать (с полем комментария)
+  - [x] POST `/api/admin/organizations/{id}/approve|reject|block`

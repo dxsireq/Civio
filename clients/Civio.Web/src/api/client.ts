@@ -30,9 +30,14 @@ api.interceptors.response.use(
     const status = error.response?.status
 
     if (status === 401) {
-      useAuthStore.getState().logout()
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      const url = error.config?.url ?? ''
+      const isAuthEndpoint =
+        url.includes('/api/auth/login') || url.includes('/api/auth/register')
+      if (!isAuthEndpoint) {
+        useAuthStore.getState().logout()
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
       }
       return Promise.reject(error)
     }
