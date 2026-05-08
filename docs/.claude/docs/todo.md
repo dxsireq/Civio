@@ -1,5 +1,7 @@
 # Civio — TODO
 
+## Выполнил Задачу - перенёс вниз в конец раздела Готово
+
 ## QR-коды
 
 - [ ] изменить вывод scan endpoint (после того как будут готовы пользовательские клиенты)
@@ -14,13 +16,7 @@
 
 ### Фаза 0 — Инфраструктура
 
-- [ ] Установить зависимости: `react-router-dom`, `axios`, `zustand`, `tailwindcss`, `shadcn/ui`, `react-hook-form`, `zod`, `jsqr`
-- [ ] API-клиент: `axios` instance, JWT из localStorage, интерцептор 401 → logout
-- [ ] Auth store (Zustand): `token`, `user`, `login()`, `logout()`
-- [ ] `ProtectedRoute` — редирект на `/login` если нет токена
-- [ ] `AdminRoute` — редирект если нет роли `PlatformAdmin`
-- [ ] Layout компоненты: `AppLayout` (сайдбар + хедер), `AuthLayout` (центрированная форма)
-- [ ] Глобальный error handler (toast уведомления)
+
 
 ---
 
@@ -342,3 +338,10 @@ e2e гражданина: регистрация → поиск организа
 - [x] `POST /api/admin/organizations/{id}/approve`
 - [x] `POST /api/admin/organizations/{id}/reject`
 - [x] `POST /api/admin/organizations/{id}/block`
+- [x] Установить зависимости: `react-router-dom`, `axios`, `zustand`, `tailwindcss`, `shadcn/ui`, `react-hook-form`, `zod`, `jsqr`
+- [x] API-клиент: `axios` instance, JWT из localStorage, интерцептор 401 → logout
+- [x] Auth store (Zustand): `token`, `user`, `login()`, `logout()`
+- [x] `ProtectedRoute` — редирект на `/login` если нет токена
+- [x] `AdminRoute` — редирект если нет роли `PlatformAdmin`
+- [x] Layout компоненты: `AppLayout` (сайдбар + хедер), `AuthLayout` (центрированная форма)
+- [x] Глобальный error handler (toast уведомления)
