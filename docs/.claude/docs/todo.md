@@ -30,14 +30,14 @@ e2e гражданина: регистрация → поиск организа
 
 ### Фаза 0 — Инфраструктура
 
-- [ ] Создать Android проект (Kotlin + Compose + Hilt)
-- [ ] Подключить зависимости: Retrofit, OkHttp, Hilt, Navigation Compose, ZXing, EncryptedSharedPreferences, Coroutines
-- [ ] `ApiClient` — Retrofit instance, OkHttp interceptor: добавлять `Authorization: Bearer <token>`, 401 → logout
-- [ ] `TokenStorage` — сохранение/чтение JWT из EncryptedSharedPreferences
-- [ ] `AuthViewModel` — `StateFlow<AuthState>`, `login()`, `logout()`, `register()`
-- [ ] `NavGraph` — граф навигации: auth-граф + main-граф (bottom nav)
-- [ ] Общие Compose-компоненты: `CivioButton`, `CivioTextField`, `CivioCard`, `StatusBadge`, `LoadingBox`, `EmptyState`
-- [ ] Тема: Material 3, цвета (indigo primary, surface, error)
+- [x] Создать Android проект (Kotlin + Compose + Hilt)
+- [x] Подключить зависимости: Retrofit, OkHttp, Hilt, Navigation Compose, ZXing, EncryptedSharedPreferences, Coroutines
+- [x] `ApiClient` — Retrofit instance, OkHttp interceptor: добавлять `Authorization: Bearer <token>`, 401 → logout
+- [x] `TokenStorage` — сохранение/чтение JWT из EncryptedSharedPreferences
+- [x] `AuthViewModel` — `StateFlow<AuthState>`, `login()`, `logout()`, `register()`
+- [x] `NavGraph` — граф навигации: auth-граф + main-граф (bottom nav)
+- [x] Общие Compose-компоненты: `CivioButton`, `CivioTextField`, `CivioCard`, `StatusBadge`, `LoadingBox`, `EmptyState`
+- [x] Тема: Material 3, цвета (indigo primary, surface, error)
 
 ---
 
