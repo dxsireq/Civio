@@ -335,24 +335,35 @@ INSERT INTO notification_statuses (code, name) VALUES
 ('failed', 'Ошибка отправки');
 
 -- =============================================================
--- Credentials (password hash is a placeholder — see note below):
---   owner@civio.test    / Test1234!
---   employee@civio.test / Test1234!
---   client@civio.test   / Test1234!
+-- Credentials. Password for ALL accounts: 'Test1234!'
+-- PasswordHasher hash: 'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA=='
 --
--- NOTE: password_hash uses ASP.NET Core PasswordHasher<User> (PBKDF2).
--- To get real hashes, register each user via POST /api/auth/register,
--- then copy the generated hash:
---   UPDATE users SET password_hash = '<hash>' WHERE email = 'owner@civio.test';
+-- Accounts:
+--   owner@civio.test      / Test1234!  — owns org1 (approved) + org2 (approved)
+--   employee@civio.test   / Test1234!  — works in org1 (emp1)
+--   client@civio.test     / Test1234!  — citizen with bookings (created, confirmed, cancelled)
+--   admin@civio.test      / Test1234!  — PlatformAdmin
+--   owner2@civio.test     / Test1234!  — owns org3 (pending moderation)
+--   owner3@civio.test     / Test1234!  — owns org4 (rejected)
+--   owner4@civio.test     / Test1234!  — owns org5 (blocked)
+--   employee2@civio.test  / Test1234!  — no employee link (free citizen, OrganizationEmployee role)
+--   employee3@civio.test  / Test1234!  — works in org2 (emp3)
+--   client2@civio.test    / Test1234!  — citizen with completed + rejected bookings
+--   client3@civio.test    / Test1234!  — clean citizen (no bookings)
 --
 -- Fixed UUIDs for predictable Postman / integration testing:
---   owner    a0000000-0000-0000-0000-000000000001
---   employee a0000000-0000-0000-0000-000000000002
---   client   a0000000-0000-0000-0000-000000000003
---   org      b0000000-0000-0000-0000-000000000001
---   emp rec  c0000000-0000-0000-0000-000000000001
---   service  d0000000-0000-0000-0000-000000000001
---   work_day e0000000-0000-0000-0000-000000000001
+--   users        a0000000-0000-0000-0000-00000000000{1..b}
+--   organizations b0000000-0000-0000-0000-00000000000{1..5}
+--   employees    c0000000-0000-0000-0000-00000000000{1..4}
+--   services     d0000000-0000-0000-0000-00000000000{1..4}
+--   work_days    e0000000-0000-0000-0000-00000000000{1..8}
+--   booking_slots f0000000-0000-0000-0000-00000000000{1..6}
+--   bookings     10000000-0000-0000-0000-00000000000{1..5}
+--   booking_qr   11000000-0000-0000-0000-00000000000{1..2}
+--   notifications 12000000-0000-0000-0000-00000000000{1..6}
+--   moderation_history 13000000-0000-0000-0000-00000000000{1..4}
+--   service_categories 15000000-0000-0000-0000-00000000000{1..3}
+--   device_push_tokens 16000000-0000-0000-0000-00000000000{1..3}
 -- =============================================================
 
 -- -------------------------------------------------------------
@@ -459,3 +470,411 @@ VALUES (
     NOW()
 )
 ON CONFLICT (employee_id, work_date) DO NOTHING;
+
+-- =============================================================
+-- EXTENDED SEED (E2E coverage)
+-- Presentation window: now → 2026-07-01.
+-- Past bookings dated 2026-05-11 (well past for any demo run).
+-- Future bookings dated 2026-07-06..2026-07-10 (remain future through 2026-07-01).
+-- emp1 schedule_templates: Mon–Fri 09:00–18:00 (Jul 6 = Mon).
+-- =============================================================
+
+-- -------------------------------------------------------------
+-- Additional users (shared password hash)
+-- -------------------------------------------------------------
+DO $seed_users$
+DECLARE
+    pw TEXT := 'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==';
+BEGIN
+    INSERT INTO users (id, email, password_hash, first_name, last_name, phone, is_active, created_at) VALUES
+        ('a0000000-0000-0000-0000-000000000004', 'admin@civio.test',     pw, 'Админ',   'Платформы',  '+7 900 000-00-04', true, NOW()),
+        ('a0000000-0000-0000-0000-000000000005', 'owner2@civio.test',    pw, 'Сергей',  'Кузнецов',   '+7 900 000-00-05', true, NOW()),
+        ('a0000000-0000-0000-0000-000000000006', 'owner3@civio.test',    pw, 'Андрей',  'Смирнов',    '+7 900 000-00-06', true, NOW()),
+        ('a0000000-0000-0000-0000-000000000007', 'owner4@civio.test',    pw, 'Виктор',  'Морозов',    '+7 900 000-00-07', true, NOW()),
+        ('a0000000-0000-0000-0000-000000000008', 'employee2@civio.test', pw, 'Ольга',   'Соколова',   '+7 900 000-00-08', true, NOW()),
+        ('a0000000-0000-0000-0000-000000000009', 'employee3@civio.test', pw, 'Елена',   'Васильева',  '+7 900 000-00-09', true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000a', 'client2@civio.test',   pw, 'Дмитрий', 'Новиков',    '+7 900 000-00-0a', true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000b', 'client3@civio.test',   pw, 'Анна',    'Фёдорова',   '+7 900 000-00-0b', true, NOW())
+    ON CONFLICT (email) DO NOTHING;
+END
+$seed_users$;
+
+-- -------------------------------------------------------------
+-- Role assignments
+-- -------------------------------------------------------------
+INSERT INTO user_roles (user_id, role_id)
+SELECT 'a0000000-0000-0000-0000-000000000004', id FROM roles WHERE name = 'PlatformAdmin'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM (VALUES
+    ('a0000000-0000-0000-0000-000000000005'::uuid),
+    ('a0000000-0000-0000-0000-000000000006'::uuid),
+    ('a0000000-0000-0000-0000-000000000007'::uuid),
+    ('a0000000-0000-0000-0000-00000000000a'::uuid),
+    ('a0000000-0000-0000-0000-00000000000b'::uuid)
+) u(id)
+CROSS JOIN roles r
+WHERE r.name = 'Citizen'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM (VALUES
+    ('a0000000-0000-0000-0000-000000000008'::uuid),
+    ('a0000000-0000-0000-0000-000000000009'::uuid)
+) u(id)
+CROSS JOIN roles r
+WHERE r.name = 'OrganizationEmployee'
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Additional organizations (cover all statuses)
+-- -------------------------------------------------------------
+INSERT INTO organizations (id, name, city, address, description, email, phone, status_id, owner_user_id, created_at) VALUES
+    ('b0000000-0000-0000-0000-000000000002', 'Барбершоп Civio', 'Санкт-Петербург', 'Невский пр., 25',
+        'Современный мужской барбершоп', 'spb@civio.test', '+7 900 000-00-10',
+        (SELECT id FROM organization_statuses WHERE code = 'approved'),
+        'a0000000-0000-0000-0000-000000000001', NOW()),
+
+    ('b0000000-0000-0000-0000-000000000003', 'Маникюрный салон Pending', 'Москва', 'ул. Арбат, 10',
+        'Ожидает модерации', 'pending@civio.test', '+7 900 000-00-11',
+        (SELECT id FROM organization_statuses WHERE code = 'pending'),
+        'a0000000-0000-0000-0000-000000000005', NOW()),
+
+    ('b0000000-0000-0000-0000-000000000004', 'Спа-салон Rejected', 'Казань', 'ул. Кремлёвская, 5',
+        'Отклонена модератором', 'rejected@civio.test', '+7 900 000-00-12',
+        (SELECT id FROM organization_statuses WHERE code = 'rejected'),
+        'a0000000-0000-0000-0000-000000000006', NOW()),
+
+    ('b0000000-0000-0000-0000-000000000005', 'Студия Blocked', 'Москва', 'ул. Закрытая, 1',
+        'Заблокирована', 'blocked@civio.test', '+7 900 000-00-13',
+        (SELECT id FROM organization_statuses WHERE code = 'blocked'),
+        'a0000000-0000-0000-0000-000000000007', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Service categories
+-- -------------------------------------------------------------
+INSERT INTO service_categories (id, organization_id, name, description) VALUES
+    ('15000000-0000-0000-0000-000000000001', 'b0000000-0000-0000-0000-000000000001', 'Волосы', 'Стрижка и окрашивание'),
+    ('15000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', 'Ногти',  'Маникюр и педикюр'),
+    ('15000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000002', 'Стрижка', 'Мужские стрижки')
+ON CONFLICT (id) DO NOTHING;
+
+-- Attach existing service to category
+UPDATE services
+SET category_id = '15000000-0000-0000-0000-000000000001'
+WHERE id = 'd0000000-0000-0000-0000-000000000001'
+  AND category_id IS NULL;
+
+-- -------------------------------------------------------------
+-- Additional services (cover active + inactive, multi-org)
+-- -------------------------------------------------------------
+INSERT INTO services (id, organization_id, category_id, name, description, duration_minutes, price, is_active, created_at) VALUES
+    ('d0000000-0000-0000-0000-000000000002', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000001',
+        'Окрашивание', 'Окрашивание волос', 120, 4500.00, true, NOW()),
+    ('d0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000002',
+        'Маникюр (архив)', 'Снят с продажи', 90, 2000.00, false, NOW()),
+    ('d0000000-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000002', '15000000-0000-0000-0000-000000000003',
+        'Мужская стрижка', 'Классическая мужская стрижка', 45, 1200.00, true, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Additional employees
+-- -------------------------------------------------------------
+INSERT INTO employees (id, user_id, organization_id, first_name, last_name, position, phone, email, is_active, created_at) VALUES
+    -- emp2: no user_id (admin без аккаунта в системе)
+    ('c0000000-0000-0000-0000-000000000002', NULL,
+        'b0000000-0000-0000-0000-000000000001',
+        'Татьяна', 'Орлова', 'Администратор', '+7 900 000-00-20', NULL, true, NOW()),
+
+    -- emp3: linked to employee3 user, works in org2
+    ('c0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000009',
+        'b0000000-0000-0000-0000-000000000002',
+        'Елена', 'Васильева', 'Барбер', '+7 900 000-00-21', 'employee3@civio.test', true, NOW()),
+
+    -- emp4: soft-deleted (is_active=false) in org1
+    ('c0000000-0000-0000-0000-000000000004', NULL,
+        'b0000000-0000-0000-0000-000000000001',
+        'Павел', 'Зайцев', 'Стилист (уволен)', '+7 900 000-00-22', NULL, false, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Employee ↔ Service links
+-- -------------------------------------------------------------
+INSERT INTO employee_services (employee_id, service_id) VALUES
+    -- emp1 also does Окрашивание
+    ('c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000002'),
+    -- emp3 does Мужская стрижка in org2
+    ('c0000000-0000-0000-0000-000000000003', 'd0000000-0000-0000-0000-000000000004')
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Schedule templates for emp1 (Mon–Fri 09:00–18:00, break 13:00–14:00)
+-- -------------------------------------------------------------
+INSERT INTO schedule_templates (employee_id, day_of_week, start_time, end_time, break_start, break_end, is_active)
+SELECT 'c0000000-0000-0000-0000-000000000001', d, '09:00'::time, '18:00'::time, '13:00'::time, '14:00'::time, true
+FROM generate_series(1, 5) AS d
+ON CONFLICT DO NOTHING;
+
+-- Schedule template for emp3 (Tue–Sat 10:00–20:00)
+INSERT INTO schedule_templates (employee_id, day_of_week, start_time, end_time, is_active)
+SELECT 'c0000000-0000-0000-0000-000000000003', d, '10:00'::time, '20:00'::time, true
+FROM generate_series(2, 6) AS d
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Work days for emp1 (past + today + future + day off)
+-- -------------------------------------------------------------
+INSERT INTO work_days (id, employee_id, work_date, start_time, end_time, break_start, break_end, is_working, created_at) VALUES
+    -- Past day for COMPLETED booking
+    ('e0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001', '2026-05-11', '09:00', '18:00', '13:00', '14:00', true,  NOW()),
+    -- Future day for CONFIRMED booking (Mon, Jul 6)
+    ('e0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', '2026-07-06', '09:00', '18:00', '13:00', '14:00', true,  NOW()),
+    -- Future day-off (Tue, Jul 7)
+    ('e0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000001', '2026-07-07', '09:00', '18:00', NULL,    NULL,    false, NOW()),
+    -- Future day for CANCELLED + REJECTED bookings (Wed, Jul 8)
+    ('e0000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001', '2026-07-08', '09:00', '18:00', '13:00', '14:00', true,  NOW()),
+    -- Future day for CREATED booking (Thu, Jul 9)
+    ('e0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001', '2026-07-09', '09:00', '18:00', '13:00', '14:00', true,  NOW()),
+    -- Future day for admin-BLOCKED slot (Fri, Jul 10)
+    ('e0000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000001', '2026-07-10', '09:00', '18:00', '13:00', '14:00', true,  NOW()),
+    -- emp3 work day in org2 (Tue, Jul 7 — matches emp3 Tue-Sat template)
+    ('e0000000-0000-0000-0000-000000000008', 'c0000000-0000-0000-0000-000000000003', '2026-07-07', '10:00', '20:00', NULL,    NULL,    true,  NOW())
+ON CONFLICT (employee_id, work_date) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Booking slots
+--   Slot statuses used: booked (for bookings), blocked (admin block)
+-- -------------------------------------------------------------
+INSERT INTO booking_slots (id, employee_id, service_id, work_day_id, status_id, start_at, end_at, created_at) VALUES
+    -- f1: past slot for COMPLETED booking (2026-05-11)
+    ('f0000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000002',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-05-11 10:00:00+00', '2026-05-11 11:00:00+00', NOW()),
+
+    -- f2: future slot for CONFIRMED booking (2026-07-06, with QR)
+    ('f0000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000003',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-07-06 10:00:00+00', '2026-07-06 11:00:00+00', NOW()),
+
+    -- f3: slot for CANCELLED booking (2026-07-08)
+    ('f0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000005',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-07-08 11:00:00+00', '2026-07-08 12:00:00+00', NOW()),
+
+    -- f4: slot for REJECTED booking (2026-07-08)
+    ('f0000000-0000-0000-0000-000000000004', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000005',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-07-08 14:00:00+00', '2026-07-08 15:00:00+00', NOW()),
+
+    -- f5: slot for CREATED booking — awaiting confirmation (2026-07-09)
+    ('f0000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000001', 'e0000000-0000-0000-0000-000000000006',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-07-09 15:00:00+00', '2026-07-09 16:00:00+00', NOW()),
+
+    -- f6: admin-blocked slot, no booking (2026-07-10)
+    ('f0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001',
+        NULL, 'e0000000-0000-0000-0000-000000000007',
+        (SELECT id FROM slot_statuses WHERE code = 'blocked'),
+        '2026-07-10 09:00:00+00', '2026-07-10 10:00:00+00', NOW())
+ON CONFLICT (employee_id, start_at, end_at) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Bookings (one per status: created, confirmed, cancelled, rejected, completed)
+-- -------------------------------------------------------------
+INSERT INTO bookings (id, citizen_id, organization_id, employee_id, service_id, slot_id, status_id, comment, created_at, updated_at) VALUES
+    -- b1: CREATED — client, awaits org action
+    ('10000000-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+        'f0000000-0000-0000-0000-000000000005',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        'Прошу подтвердить', NOW(), NULL),
+
+    -- b2: CONFIRMED — client, future, has QR (unused)
+    ('10000000-0000-0000-0000-000000000002',
+        'a0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+        'f0000000-0000-0000-0000-000000000002',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        NULL, NOW(), NOW()),
+
+    -- b3: COMPLETED — client2, past, has QR (used)
+    ('10000000-0000-0000-0000-000000000003',
+        'a0000000-0000-0000-0000-00000000000a', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+        'f0000000-0000-0000-0000-000000000001',
+        (SELECT id FROM booking_statuses WHERE code = 'completed'),
+        NULL, NOW(), NOW()),
+
+    -- b4: CANCELLED — client cancelled
+    ('10000000-0000-0000-0000-000000000004',
+        'a0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+        'f0000000-0000-0000-0000-000000000003',
+        (SELECT id FROM booking_statuses WHERE code = 'cancelled'),
+        'Передумал', NOW(), NOW()),
+
+    -- b5: REJECTED — org rejected client2
+    ('10000000-0000-0000-0000-000000000005',
+        'a0000000-0000-0000-0000-00000000000a', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000001',
+        'f0000000-0000-0000-0000-000000000004',
+        (SELECT id FROM booking_statuses WHERE code = 'rejected'),
+        NULL, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Booking status history
+-- -------------------------------------------------------------
+INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+    -- b2: created → confirmed
+    ('10000000-0000-0000-0000-000000000002',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000002', 'Подтверждено сотрудником'),
+
+    -- b3: created → confirmed → completed
+    ('10000000-0000-0000-0000-000000000003',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000002', NULL),
+    ('10000000-0000-0000-0000-000000000003',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        (SELECT id FROM booking_statuses WHERE code = 'completed'),
+        'a0000000-0000-0000-0000-000000000002', 'QR проверен'),
+
+    -- b4: created → cancelled
+    ('10000000-0000-0000-0000-000000000004',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'cancelled'),
+        'a0000000-0000-0000-0000-000000000003', 'Передумал'),
+
+    -- b5: created → rejected
+    ('10000000-0000-0000-0000-000000000005',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'rejected'),
+        'a0000000-0000-0000-0000-000000000001', 'Нет мастера');
+
+-- -------------------------------------------------------------
+-- Booking QR codes
+-- -------------------------------------------------------------
+INSERT INTO booking_qr_codes (id, booking_id, token, expires_at, used_at, created_at) VALUES
+    -- For confirmed booking — valid, unused (expires 2026-07-06 12:00 UTC)
+    ('11000000-0000-0000-0000-000000000001',
+        '10000000-0000-0000-0000-000000000002',
+        'QR_TOKEN_CONFIRMED_UNUSED_FAKE_BASE64URL_AAAAAAAAAAAAAAAAAAAAAAAAAA',
+        '2026-07-06 12:00:00+00', NULL, NOW()),
+
+    -- For completed booking — already used (2026-05-11)
+    ('11000000-0000-0000-0000-000000000002',
+        '10000000-0000-0000-0000-000000000003',
+        'QR_TOKEN_COMPLETED_USED_FAKE_BASE64URL_BBBBBBBBBBBBBBBBBBBBBBBBBBB',
+        '2026-05-11 12:00:00+00', '2026-05-11 10:55:00+00', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Notifications (cover types × channels × statuses)
+-- -------------------------------------------------------------
+INSERT INTO notifications (id, user_id, booking_id, type_id, channel_id, status_id, title, message, error_message, created_at, sent_at) VALUES
+    -- created notification, email, sent
+    ('12000000-0000-0000-0000-000000000001',
+        'a0000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001',
+        (SELECT id FROM notification_types    WHERE code = 'booking_created'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись создана', 'Ваша запись на Стрижку 2026-07-09 15:00 создана', NULL, NOW(), NOW()),
+
+    -- confirmed, email, sent
+    ('12000000-0000-0000-0000-000000000002',
+        'a0000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002',
+        (SELECT id FROM notification_types    WHERE code = 'booking_confirmed'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись подтверждена', 'Стрижка 2026-07-06 10:00 подтверждена', NULL, NOW(), NOW()),
+
+    -- confirmed, push, created (pending dispatch)
+    ('12000000-0000-0000-0000-000000000003',
+        'a0000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002',
+        (SELECT id FROM notification_types    WHERE code = 'booking_confirmed'),
+        (SELECT id FROM notification_channels WHERE code = 'push'),
+        (SELECT id FROM notification_statuses WHERE code = 'created'),
+        'Запись подтверждена', 'Стрижка 2026-07-06 10:00', NULL, NOW(), NULL),
+
+    -- cancelled, email, failed
+    ('12000000-0000-0000-0000-000000000004',
+        'a0000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000004',
+        (SELECT id FROM notification_types    WHERE code = 'booking_cancelled'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'failed'),
+        'Запись отменена', 'Стрижка 2026-07-08 11:00 отменена', 'SMTP timeout', NOW(), NULL),
+
+    -- completed, email, sent
+    ('12000000-0000-0000-0000-000000000005',
+        'a0000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000003',
+        (SELECT id FROM notification_types    WHERE code = 'booking_completed'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись завершена', 'Стрижка 2026-05-11 10:00 завершена', NULL, NOW(), NOW()),
+
+    -- completed, push, sent
+    ('12000000-0000-0000-0000-000000000006',
+        'a0000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-000000000003',
+        (SELECT id FROM notification_types    WHERE code = 'booking_completed'),
+        (SELECT id FROM notification_channels WHERE code = 'push'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись завершена', 'Стрижка 2026-05-11 10:00', NULL, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Organization moderation history
+-- -------------------------------------------------------------
+INSERT INTO organization_moderation_history (id, organization_id, moderator_id, old_status_id, new_status_id, comment, created_at) VALUES
+    -- org1: pending → approved
+    ('13000000-0000-0000-0000-000000000001',
+        'b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000004',
+        (SELECT id FROM organization_statuses WHERE code = 'pending'),
+        (SELECT id FROM organization_statuses WHERE code = 'approved'),
+        'Документы в порядке', NOW()),
+
+    -- org2: pending → approved
+    ('13000000-0000-0000-0000-000000000002',
+        'b0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000004',
+        (SELECT id FROM organization_statuses WHERE code = 'pending'),
+        (SELECT id FROM organization_statuses WHERE code = 'approved'),
+        NULL, NOW()),
+
+    -- org4: pending → rejected
+    ('13000000-0000-0000-0000-000000000003',
+        'b0000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-000000000004',
+        (SELECT id FROM organization_statuses WHERE code = 'pending'),
+        (SELECT id FROM organization_statuses WHERE code = 'rejected'),
+        'Не прошла проверку ИНН', NOW()),
+
+    -- org5: pending → approved → blocked
+    ('13000000-0000-0000-0000-000000000004',
+        'b0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000004',
+        (SELECT id FROM organization_statuses WHERE code = 'approved'),
+        (SELECT id FROM organization_statuses WHERE code = 'blocked'),
+        'Жалобы клиентов', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Device push tokens
+-- -------------------------------------------------------------
+INSERT INTO device_push_tokens (id, user_id, token, platform, is_active, created_at) VALUES
+    ('16000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003',
+        'FCM_TOKEN_CLIENT_ANDROID_FAKE_TEST_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'android', true, NOW()),
+    ('16000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000003',
+        'FCM_TOKEN_CLIENT_IOS_FAKE_TEST_BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB', 'ios', true, NOW()),
+    ('16000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-00000000000a',
+        'FCM_TOKEN_CLIENT2_ANDROID_FAKE_TEST_CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC', 'android', true, NOW())
+ON CONFLICT (token) DO NOTHING;
