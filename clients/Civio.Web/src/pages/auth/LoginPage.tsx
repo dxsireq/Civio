@@ -114,6 +114,12 @@ export function LoginPage() {
                 {emailError}
               </div>
             )}
+            {formError && !emailError && (
+              <div className="field-error">
+                <AlertCircle size={13} />
+                {formError}
+              </div>
+            )}
           </div>
 
           <div className="field">
@@ -125,9 +131,7 @@ export function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                className={
-                  'input' + (passwordError || formError ? ' has-error' : '')
-                }
+                className={'input' + (passwordError ? ' has-error' : '')}
                 {...register('password')}
               />
               <button
@@ -146,12 +150,19 @@ export function LoginPage() {
                 {passwordError}
               </div>
             )}
-            {formError && !emailError && !passwordError && (
-              <div className="field-error">
-                <AlertCircle size={13} />
-                {formError}
-              </div>
-            )}
+            <div style={{ textAlign: 'right', marginTop: 6 }}>
+              <Link
+                to="/forgot-password"
+                style={{
+                  fontSize: 13,
+                  color: 'var(--indigo-700)',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
+                Забыли пароль?
+              </Link>
+            </div>
           </div>
 
           <button

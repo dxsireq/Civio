@@ -42,6 +42,15 @@
 }
 
 .civio {
+  --bg: #ffffff;
+  --bg-soft: #f7f8fa;
+  --bg-muted: #f1f2f5;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #0f172a;
+  --text-soft: #475569;
+  --text-muted: #94a3b8;
+
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-feature-settings: 'cv11', 'ss01';
   color: var(--text);
@@ -52,11 +61,14 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  color-scheme: light;
+  text-align: left;
 }
 
 .civio *, .civio *::before, .civio *::after { box-sizing: border-box; }
 .civio button { font-family: inherit; cursor: pointer; }
 .civio input, .civio textarea, .civio select { font-family: inherit; font-size: inherit; color: inherit; }
+.civio h1, .civio h2, .civio h3, .civio h4, .civio h5, .civio h6 { color: var(--text); font-family: inherit; }
 
 /* ── Logo / wordmark ─────────────────────── */
 .civio-logo {
