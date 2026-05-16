@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Calendar, Pencil, Scissors, Users } from 'lucide-react'
+import { ArrowLeft, Calendar, Pencil, Scissors, Users } from 'lucide-react'
 import {
   getOrganization,
   type Organization,
@@ -102,6 +102,21 @@ export function OrgDashboardPage() {
             color: 'var(--text-soft)',
           }}
         >
+          <Link
+            to="/"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              color: 'var(--indigo-700)',
+              fontWeight: 500,
+              textDecoration: 'none',
+            }}
+          >
+            <ArrowLeft size={14} />
+            Мои организации
+          </Link>
+          <span>·</span>
           {org.name}
         </div>
       </div>
