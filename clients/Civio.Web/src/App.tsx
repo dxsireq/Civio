@@ -13,6 +13,7 @@ import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage'
 import { ActivityLogPage } from './pages/admin/ActivityLogPage'
 import { MyOrgsPage } from './pages/org/MyOrgsPage'
 import { CreateOrgPage } from './pages/org/CreateOrgPage'
+import { EditOrgPage } from './pages/org/EditOrgPage'
 import { OrgDashboardPage } from './pages/org/OrgDashboardPage'
 import { EmployeesPage } from './pages/org/EmployeesPage'
 import { EmployeeDetailPage } from './pages/org/EmployeeDetailPage'
@@ -55,6 +56,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<MyOrgsPage />} />
           <Route path="/organizations/new" element={<CreateOrgPage />} />
+          <Route path="/organizations/:id/edit" element={<EditOrgPage />} />
           <Route path="/organizations/:id" element={<AppLayout />}>
             <Route index element={<OrgDashboardPage />} />
             <Route path="employees" element={<EmployeesPage />} />

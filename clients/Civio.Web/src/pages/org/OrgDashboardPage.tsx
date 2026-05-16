@@ -1,21 +1,55 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Pencil, Scissors, Users } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
 import {
   getOrganization,
   type Organization,
 } from '../../api/organizations'
 import { getEmployees } from '../../api/employees'
 import { getServices } from '../../api/services'
-import { getOrgBookings } from '../../api/bookings'
+import { getOrgBookings, type BookingSummary } from '../../api/bookings'
 import { getErrorMessage } from '../../api/client'
 import { ORG_STATUS_BADGE, ORG_STATUS_LABEL } from '../../lib/orgStatus'
+import {
+  BOOKING_STATUS_BADGE,
+  BOOKING_STATUS_LABEL,
+} from '../../lib/bookingStatus'
 
 interface Stats {
   employees: number | null
   services: number | null
   pendingBookings: number | null
   todayBookings: number | null
+}
+
+function initialsOf(first: string | null, last: string | null): string {
+  const a = first?.[0] ?? ''
+  const b = last?.[0] ?? ''
+  return (a + b).toUpperCase() || '?'
+}
+
+function formatWhen(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const dayMs = 86_400_000
+  const diff = Math.round((target.getTime() - today.getTime()) / dayMs)
+  const time = d.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  let day: string
+  if (diff === 0) day = 'сегодня'
+  else if (diff === 1) day = 'завтра'
+  else if (diff === -1) day = 'вчера'
+  else
+    day = d.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+    })
+  return `${day} · ${time}`
 }
 
 function isToday(iso: string): boolean {
@@ -38,6 +72,7 @@ export function OrgDashboardPage() {
     pendingBookings: null,
     todayBookings: null,
   })
+  const [recent, setRecent] = useState<BookingSummary[] | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -65,6 +100,15 @@ export function OrgDashboardPage() {
         todayBookings:
           bookings?.filter((b) => isToday(b.startAt)).length ?? null,
       })
+      if (bookings) {
+        const sorted = [...bookings].sort(
+          (a, b) =>
+            new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
+        )
+        setRecent(sorted.slice(0, 5))
+      } else {
+        setRecent([])
+      }
     })
 
     return () => {
@@ -142,6 +186,13 @@ export function OrgDashboardPage() {
               {org.city} · {org.address}
             </div>
           </div>
+          <Link
+            to={`/organizations/${id}/edit`}
+            className="btn btn-secondary btn-sm"
+          >
+            <Pencil size={13} />
+            Редактировать
+          </Link>
         </div>
 
         <div
@@ -175,15 +226,13 @@ export function OrgDashboardPage() {
           <div className="card">
             <div className="card-header">
               <h2 className="card-title">Информация об организации</h2>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                disabled
-                title="Редактирование появится позже"
+              <Link
+                to={`/organizations/${id}/edit`}
+                className="btn btn-secondary btn-sm"
               >
                 <Pencil size={13} />
                 Редактировать
-              </button>
+              </Link>
             </div>
             <div className="card-body">
               <dl className="kv">
@@ -225,24 +274,48 @@ export function OrgDashboardPage() {
 
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Разделы</h2>
+              <h2 className="card-title">Последние записи</h2>
+              <Link
+                to={`/organizations/${id}/bookings`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 13,
+                  color: 'var(--indigo-700)',
+                  textDecoration: 'none',
+                }}
+              >
+                Все
+                <ArrowRight size={13} />
+              </Link>
             </div>
             <div style={{ padding: '4px 0' }}>
-              <NavLink
-                to={`/organizations/${id}/employees`}
-                icon={<Users size={16} />}
-                label="Сотрудники"
-              />
-              <NavLink
-                to={`/organizations/${id}/services`}
-                icon={<Scissors size={16} />}
-                label="Услуги"
-              />
-              <NavLink
-                to={`/organizations/${id}/bookings`}
-                icon={<Calendar size={16} />}
-                label="Бронирования"
-              />
+              {recent === null ? (
+                <div
+                  style={{
+                    padding: '20px',
+                    color: 'var(--text-soft)',
+                    fontSize: 13,
+                  }}
+                >
+                  Загрузка…
+                </div>
+              ) : recent.length === 0 ? (
+                <div
+                  style={{
+                    padding: '20px',
+                    color: 'var(--text-soft)',
+                    fontSize: 13,
+                  }}
+                >
+                  Записей пока нет
+                </div>
+              ) : (
+                recent.map((b) => (
+                  <BookingRow key={b.id} orgId={id} booking={b} />
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -271,18 +344,19 @@ function StatCard({
   )
 }
 
-function NavLink({
-  to,
-  icon,
-  label,
+function BookingRow({
+  orgId,
+  booking,
 }: {
-  to: string
-  icon: React.ReactNode
-  label: string
+  orgId: string
+  booking: BookingSummary
 }) {
+  const name = booking.employeeFirstName
+    ? `${booking.employeeFirstName} ${booking.employeeLastName ?? ''}`.trim()
+    : 'Без сотрудника'
   return (
     <Link
-      to={to}
+      to={`/organizations/${orgId}/bookings/${booking.id}`}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -293,8 +367,37 @@ function NavLink({
         color: 'inherit',
       }}
     >
-      {icon}
-      <span style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
+      <span className="avatar">
+        {initialsOf(booking.employeeFirstName, booking.employeeLastName)}
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 500,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {name}
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: 'var(--text-soft)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {booking.serviceName} · {formatWhen(booking.startAt)}
+        </div>
+      </div>
+      <span className={BOOKING_STATUS_BADGE[booking.statusCode]}>
+        <span className="badge-dot" />
+        {BOOKING_STATUS_LABEL[booking.statusCode]}
+      </span>
     </Link>
   )
 }
