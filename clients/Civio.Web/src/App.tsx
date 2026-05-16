@@ -8,6 +8,8 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { AdminOrgsPage } from './pages/admin/AdminOrgsPage'
 import { AdminOrgDetailPage } from './pages/admin/AdminOrgDetailPage'
+import { AdminUsersPage } from './pages/admin/AdminUsersPage'
+import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage'
 import { MyOrgsPage } from './pages/org/MyOrgsPage'
 import { CreateOrgPage } from './pages/org/CreateOrgPage'
 import { OrgDashboardPage } from './pages/org/OrgDashboardPage'
@@ -39,6 +41,11 @@ export default function App() {
             <Route
               path="/admin/organizations/:id"
               element={<AdminOrgDetailPage />}
+            />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route
+              path="/admin/users/:id"
+              element={<AdminUserDetailPage />}
             />
           </Route>
         </Route>

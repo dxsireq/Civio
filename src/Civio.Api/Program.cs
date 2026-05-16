@@ -179,6 +179,7 @@ app.MapSlotsEndpoints();
 app.MapBookingEndpoints();
 app.MapNotificationEndpoints();
 app.MapAdminEndpoints();
+app.MapAdminUserEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

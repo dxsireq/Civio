@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Building2, LogOut } from 'lucide-react'
+import { Building2, LogOut, Users } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 
 function initialsOf(firstName?: string, lastName?: string): string {
@@ -41,6 +41,10 @@ export function AdminLayout() {
             <NavLink to="/admin/organizations" className={linkClass}>
               <Building2 size={16} />
               Организации
+            </NavLink>
+            <NavLink to="/admin/users" className={linkClass}>
+              <Users size={16} />
+              Пользователи
             </NavLink>
           </nav>
           <div className="sidebar-foot">

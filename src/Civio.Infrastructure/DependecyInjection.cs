@@ -34,6 +34,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
 
         services.Configure<EmailOptions>(configuration.GetSection("Email"));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
