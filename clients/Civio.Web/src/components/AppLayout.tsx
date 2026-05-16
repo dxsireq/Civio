@@ -32,7 +32,7 @@ export function AppLayout() {
   const base = `/organizations/${id}`
 
   return (
-    <div className="civio" style={{ height: '100vh' }}>
+    <div className="civio civio-app">
       <div className="layout">
         <aside className="sidebar">
           <div className="sidebar-brand">
