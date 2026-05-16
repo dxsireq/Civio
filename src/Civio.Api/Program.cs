@@ -180,6 +180,7 @@ app.MapBookingEndpoints();
 app.MapNotificationEndpoints();
 app.MapAdminEndpoints();
 app.MapAdminUserEndpoints();
+app.MapAdminActivityLogEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

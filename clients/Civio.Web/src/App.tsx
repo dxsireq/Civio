@@ -10,6 +10,7 @@ import { AdminOrgsPage } from './pages/admin/AdminOrgsPage'
 import { AdminOrgDetailPage } from './pages/admin/AdminOrgDetailPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage'
+import { ActivityLogPage } from './pages/admin/ActivityLogPage'
 import { MyOrgsPage } from './pages/org/MyOrgsPage'
 import { CreateOrgPage } from './pages/org/CreateOrgPage'
 import { OrgDashboardPage } from './pages/org/OrgDashboardPage'
@@ -47,6 +48,7 @@ export default function App() {
               path="/admin/users/:id"
               element={<AdminUserDetailPage />}
             />
+            <Route path="/admin/activity-log" element={<ActivityLogPage />} />
           </Route>
         </Route>
 
