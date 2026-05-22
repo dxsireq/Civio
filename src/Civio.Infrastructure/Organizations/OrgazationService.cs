@@ -95,12 +95,37 @@ public sealed class OrganizationService : IOrganizationService
             throw new KeyNotFoundException($"Organization {id} not found.");
 
         var hasAccess = OrganizationAccess.IsOwner(requestingUserId, organization)
-            || OrganizationAccess.IsEmployee(requestingUserId, id, organization.Employees);
+            || OrganizationAccess.IsEmployee(requestingUserId, id, organization.Employees)
+            || organization.Status.Code == "approved";
 
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
         return ToResponse(organization, organization.Status.Code);
+    }
+
+    public async Task<IReadOnlyList<OrganizationResponse>> GetCatalogAsync(
+        string? city,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Organizations
+            .AsNoTracking()
+            .Include(o => o.Status)
+            .Where(o => o.Status.Code == "approved");
+
+        if (!string.IsNullOrWhiteSpace(city))
+        {
+            var normalizedCity = city.Trim();
+            query = query.Where(o => o.City == normalizedCity);
+        }
+
+        var organizations = await query
+            .OrderBy(o => o.Name)
+            .ToListAsync(cancellationToken);
+
+        return organizations
+            .Select(o => ToResponse(o, o.Status.Code))
+            .ToList();
     }
 
     public async Task<OrganizationResponse> UpdateAsync(

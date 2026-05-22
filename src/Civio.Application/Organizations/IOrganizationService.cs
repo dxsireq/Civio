@@ -13,6 +13,10 @@ public interface IOrganizationService
         Guid ownerUserId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<OrganizationResponse>> GetCatalogAsync(
+        string? city,
+        CancellationToken cancellationToken = default);
+
     Task<OrganizationResponse> GetByIdAsync(
         Guid id,
         Guid requestingUserId,

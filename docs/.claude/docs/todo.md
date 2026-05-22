@@ -60,21 +60,21 @@ e2e гражданина: регистрация → поиск организа
 
 ### Фаза 2 — Каталог организаций
 
-- [ ] **Экран 3: Каталог** `OrganizationsScreen` (tab: Каталог)
-  - [ ] Вёрстка из файла дизайна
-  - [ ] `SearchBar` — фильтр по названию на клиенте
-  - [ ] `LazyColumn` карточек: название, город, описание
-  - [ ] GET `/api/organizations/my` (временно, нужен публичный endpoint — см. заметки)
-  - [ ] `SwipeRefresh` — pull-to-refresh
-  - [ ] Tap → `OrganizationDetailScreen`
-  - [ ] Пустое состояние
+- [x] **Экран 3: Каталог** `OrganizationsScreen` (tab: Каталог)
+  - [x] Вёрстка из файла дизайна
+  - [x] `SearchBar` — фильтр по названию на клиенте
+  - [x] `LazyColumn` карточек: название, город, описание
+  - [x] GET `/api/organizations` (авторизованный, status=approved, ?city=)
+  - [x] `SwipeRefresh` — pull-to-refresh
+  - [x] Tap → `OrganizationDetailScreen`
+  - [x] Пустое состояние
 
-- [ ] **Экран 4: Детали организации** `OrganizationDetailScreen`
-  - [ ] Вёрстка из файла дизайна
-  - [ ] Название, описание, адрес, контакты
-  - [ ] Секция «Услуги»: `LazyColumn` — название, длительность, цена
-  - [ ] GET `/api/organizations/{id}/services`
-  - [ ] Кнопка «Записаться» → `BookServiceScreen`
+- [x] **Экран 4: Детали организации** `OrganizationDetailScreen`
+  - [x] Вёрстка из файла дизайна
+  - [x] Название, описание, адрес, контакты
+  - [x] Секция «Услуги»: `LazyColumn` — название, длительность, цена
+  - [x] GET `/api/organizations/{id}/services`
+  - [x] Кнопка «Записаться» → `BookServiceScreen`
 
 ---
 
@@ -150,7 +150,7 @@ e2e гражданина: регистрация → поиск организа
 
 ### Заметки
 
-- **Публичный каталог**: нет `GET /api/organizations` (публично). Нужно добавить backend endpoint `GET /api/organizations?city=` без авторизации, либо показывать каталог только авторизованным.
+- ~~**Публичный каталог**: нет `GET /api/organizations` (публично).~~ Добавлен авторизованный `GET /api/organizations?city=` (status=approved). `GET /api/organizations/{id}` теперь доступен любому авторизованному, если status=approved.
 - **QR отображение**: ZXing генерирует Bitmap на стороне клиента из токена. Не нужна камера — только показ QR.
 - **Push-уведомления**: Firebase Cloud Messaging — опционально, можно добавить после основного функционала.
 - **Deeplink для QR**: QR кодирует токен (строку), не URL — мобильный клиент показывает QR, а не сканирует.

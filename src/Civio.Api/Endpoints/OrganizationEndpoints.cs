@@ -15,11 +15,21 @@ public static class OrganizationEndpoints
             .RequireAuthorization();
 
         group.MapPost("/", CreateOrganizationAsync);
+        group.MapGet("/", GetCatalogAsync);
         group.MapGet("/my", GetMyOrganizationsAsync);
         group.MapGet("/{id:guid}", GetOrganizationByIdAsync);
         group.MapPut("/{id:guid}", UpdateOrganizationAsync);
 
         return app;
+    }
+
+    private static async Task<IResult> GetCatalogAsync(
+        [FromQuery] string? city,
+        IOrganizationService organizationService,
+        CancellationToken cancellationToken)
+    {
+        var organizations = await organizationService.GetCatalogAsync(city, cancellationToken);
+        return Results.Ok(organizations);
     }
 
     private static async Task<IResult> GetMyOrganizationsAsync(

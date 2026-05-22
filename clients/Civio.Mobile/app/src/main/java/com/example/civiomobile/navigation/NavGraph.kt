@@ -162,7 +162,8 @@ private fun MainScaffold(onLogout: () -> Unit) {
                 val orgId = entry.arguments?.getString("orgId").orEmpty()
                 OrganizationDetailScreen(
                     orgId = orgId,
-                    onBook = { navController.navigate(Routes.bookService(orgId)) }
+                    onBook = { navController.navigate(Routes.bookService(orgId)) },
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(

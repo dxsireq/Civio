@@ -37,16 +37,6 @@ private fun PlaceholderScaffold(title: String, body: String) {
 
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
-fun OrganizationsScreen(onOpenOrg: (String) -> Unit) =
-    PlaceholderScaffold("Каталог", "Экран 3 — Фаза 2")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun OrganizationDetailScreen(orgId: String, onBook: () -> Unit) =
-    PlaceholderScaffold("Организация", "Экран 4 — Фаза 2 (id=$orgId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
 fun BookServiceScreen(orgId: String, onContinue: () -> Unit) =
     PlaceholderScaffold("Запись на услугу", "Экран 5 — Фаза 3 (id=$orgId)")
 
