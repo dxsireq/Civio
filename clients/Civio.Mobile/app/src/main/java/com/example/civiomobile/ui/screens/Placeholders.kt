@@ -37,16 +37,6 @@ private fun PlaceholderScaffold(title: String, body: String) {
 
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
-fun LoginScreen(onLoggedIn: () -> Unit, onNavigateRegister: () -> Unit) =
-    PlaceholderScaffold("Вход", "Экран 1 — реализуется в Фазе 1")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun RegisterScreen(onLoggedIn: () -> Unit, onNavigateLogin: () -> Unit) =
-    PlaceholderScaffold("Регистрация", "Экран 2 — реализуется в Фазе 1")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
 fun OrganizationsScreen(onOpenOrg: (String) -> Unit) =
     PlaceholderScaffold("Каталог", "Экран 3 — Фаза 2")
 
