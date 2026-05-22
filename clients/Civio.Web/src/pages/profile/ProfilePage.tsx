@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -120,10 +120,23 @@ export function ProfilePage() {
       style={{ minHeight: '100vh', background: 'var(--bg-soft)' }}
     >
       <div className="page" style={{ maxWidth: 720, margin: '0 auto' }}>
-        <Link to="/" className="crumb">
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) navigate(-1)
+            else navigate('/', { replace: true })
+          }}
+          className="crumb"
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+          }}
+        >
           <ArrowLeft size={14} />
           Назад
-        </Link>
+        </button>
 
         <div className="page-header">
           <div>
