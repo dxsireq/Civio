@@ -13,6 +13,7 @@ import {
 } from '../../api/adminUsers'
 import { getErrorMessage } from '../../api/client'
 import { useAuthStore } from '../../store/auth'
+import { TopbarLeft } from '../../components/Topbar'
 
 const ROLE_LABEL: Record<UserRole, string> = {
   Citizen: 'Гражданин',
@@ -172,11 +173,7 @@ export function AdminUserDetailPage() {
 
   return (
     <>
-      <div className="topbar">
-        <span style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Управление · Карточка пользователя
-        </span>
-      </div>
+      <TopbarLeft>Управление · Карточка пользователя</TopbarLeft>
 
       <div className="page">
         <Link to="/admin/users" className="crumb">

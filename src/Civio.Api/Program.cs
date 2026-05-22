@@ -170,6 +170,38 @@ authGroup.MapGet("/me", async (
 })
 .RequireAuthorization();
 
+authGroup.MapPut("/me", async (
+    UpdateProfileRequest request,
+    ClaimsPrincipal user,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var userIdRaw = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!Guid.TryParse(userIdRaw, out var userId))
+        return Results.Unauthorized();
+
+    var response = await authService.UpdateProfileAsync(userId, request, cancellationToken);
+    return Results.Ok(response);
+})
+.RequireAuthorization();
+
+authGroup.MapPost("/me/change-password", async (
+    ChangePasswordRequest request,
+    ClaimsPrincipal user,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var userIdRaw = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (!Guid.TryParse(userIdRaw, out var userId))
+        return Results.Unauthorized();
+
+    await authService.ChangePasswordAsync(userId, request, cancellationToken);
+    return Results.NoContent();
+})
+.RequireAuthorization();
+
 app.MapOrganizationEndpoints();
 app.MapEmployeeEndpoints();
 app.MapServiceEndpoints();

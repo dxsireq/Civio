@@ -8,6 +8,7 @@ import {
   type ActivityLogPage,
 } from '../../api/activityLog'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 type FilterValue = 'all' | ActivityLogEntityType
 
@@ -214,7 +215,7 @@ export function ActivityLogPage() {
 
   return (
     <>
-      <div className="topbar">
+      <TopbarLeft>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <label
             style={{
@@ -262,7 +263,7 @@ export function ActivityLogPage() {
             </button>
           )}
         </div>
-      </div>
+      </TopbarLeft>
 
       <div className="page">
         <div className="page-header">

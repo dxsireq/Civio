@@ -7,6 +7,7 @@ import {
   type OrganizationStatus,
 } from '../../api/admin'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 type FilterValue = OrganizationStatus | 'all'
 
@@ -107,7 +108,7 @@ export function AdminOrgsPage() {
 
   return (
     <>
-      <div className="topbar">
+      <TopbarLeft>
         <div style={{ position: 'relative', width: 320 }}>
           <Search
             size={15}
@@ -127,7 +128,7 @@ export function AdminOrgsPage() {
             style={{ paddingLeft: 34, height: 36 }}
           />
         </div>
-      </div>
+      </TopbarLeft>
 
       <div className="page">
         <div className="page-header">

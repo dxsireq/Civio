@@ -13,6 +13,7 @@ import {
   type Employee,
 } from '../../api/employees'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 export function EmployeesPage() {
   const { id: orgId } = useParams<{ id: string }>()
@@ -93,11 +94,7 @@ export function EmployeesPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Сотрудники
-        </div>
-      </div>
+      <TopbarLeft>Сотрудники</TopbarLeft>
 
       <div className="page">
         <div className="page-header">

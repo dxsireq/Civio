@@ -14,6 +14,7 @@ import {
   BOOKING_STATUS_BADGE,
   BOOKING_STATUS_LABEL,
 } from '../../lib/bookingStatus'
+import { TopbarLeft } from '../../components/Topbar'
 
 type FilterValue = BookingStatus | 'all'
 
@@ -127,11 +128,7 @@ export function BookingsPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Бронирования
-        </div>
-      </div>
+      <TopbarLeft>Бронирования</TopbarLeft>
 
       <div className="page">
         <div className="page-header">

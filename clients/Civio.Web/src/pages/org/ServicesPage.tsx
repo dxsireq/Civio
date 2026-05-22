@@ -11,6 +11,7 @@ import {
   type Service,
 } from '../../api/services'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 interface FormState {
   name: string
@@ -136,9 +137,7 @@ export function ServicesPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>Услуги</div>
-      </div>
+      <TopbarLeft>Услуги</TopbarLeft>
 
       <div className="page">
         <div className="page-header">

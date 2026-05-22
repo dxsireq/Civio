@@ -13,7 +13,21 @@ export interface CurrentUserResponse {
   email: string
   firstName: string
   lastName: string
+  middleName: string | null
+  phone: string | null
   roles: string[]
+}
+
+export interface UpdateProfileRequest {
+  firstName: string
+  lastName: string
+  middleName?: string
+  phone?: string
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
 }
 
 export interface LoginRequest {
@@ -42,4 +56,17 @@ export async function register(data: RegisterRequest): Promise<AuthResponse> {
 export async function me(): Promise<CurrentUserResponse> {
   const res = await api.get<CurrentUserResponse>('/api/auth/me')
   return res.data
+}
+
+export async function updateProfile(
+  data: UpdateProfileRequest,
+): Promise<CurrentUserResponse> {
+  const res = await api.put<CurrentUserResponse>('/api/auth/me', data)
+  return res.data
+}
+
+export async function changePassword(
+  data: ChangePasswordRequest,
+): Promise<void> {
+  await api.post('/api/auth/me/change-password', data)
 }

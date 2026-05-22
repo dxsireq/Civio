@@ -134,6 +134,83 @@ public sealed class AuthService : IAuthService
             user.Email,
             user.FirstName,
             user.LastName,
+            user.MiddleName,
+            user.Phone,
             roles);
+    }
+
+    public async Task<CurrentUserResponse> UpdateProfileAsync(
+        Guid userId,
+        UpdateProfileRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _dbContext.Users
+            .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null)
+            throw new UnauthorizedAccessException("User was not found.");
+
+        var newPhone = string.IsNullOrWhiteSpace(request.Phone)
+            ? null
+            : request.Phone.Trim();
+
+        if (newPhone is not null && newPhone != user.Phone)
+        {
+            var phoneTaken = await _dbContext.Users
+                .AnyAsync(x => x.Id != userId && x.Phone == newPhone, cancellationToken);
+
+            if (phoneTaken)
+                throw new InvalidOperationException("Phone is already in use.");
+        }
+
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+        user.MiddleName = string.IsNullOrWhiteSpace(request.MiddleName)
+            ? null
+            : request.MiddleName.Trim();
+        user.Phone = newPhone;
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var roles = user.UserRoles
+            .Select(x => x.Role.Name)
+            .ToArray();
+
+        return new CurrentUserResponse(
+            user.Id,
+            user.Email,
+            user.FirstName,
+            user.LastName,
+            user.MiddleName,
+            user.Phone,
+            roles);
+    }
+
+    public async Task ChangePasswordAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _dbContext.Users
+            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (user is null)
+            throw new UnauthorizedAccessException("User was not found.");
+
+        var verification = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            request.CurrentPassword);
+
+        if (verification == PasswordVerificationResult.Failed)
+            throw new InvalidOperationException("Current password is incorrect.");
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

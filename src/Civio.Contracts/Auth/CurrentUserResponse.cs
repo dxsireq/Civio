@@ -5,4 +5,6 @@ public sealed record CurrentUserResponse(
     string Email,
     string FirstName,
     string LastName,
+    string? MiddleName,
+    string? Phone,
     IReadOnlyCollection<string> Roles);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
+import { TopbarLeft } from '../../components/Topbar'
 import {
   getOrganization,
   type Organization,
@@ -136,34 +137,24 @@ export function OrgDashboardPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div
+      <TopbarLeft>
+        <Link
+          to="/"
           style={{
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
-            fontSize: 14,
-            color: 'var(--text-soft)',
+            gap: 4,
+            color: 'var(--indigo-700)',
+            fontWeight: 500,
+            textDecoration: 'none',
           }}
         >
-          <Link
-            to="/"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              color: 'var(--indigo-700)',
-              fontWeight: 500,
-              textDecoration: 'none',
-            }}
-          >
-            <ArrowLeft size={14} />
-            Мои организации
-          </Link>
-          <span>·</span>
-          {org.name}
-        </div>
-      </div>
+          <ArrowLeft size={14} />
+          Мои организации
+        </Link>
+        <span>·</span>
+        {org.name}
+      </TopbarLeft>
 
       <div className="page">
         <div className="page-header">

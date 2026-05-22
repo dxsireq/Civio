@@ -40,6 +40,8 @@ export function LoginPage() {
         email: current.email,
         firstName: current.firstName,
         lastName: current.lastName,
+        middleName: current.middleName,
+        phone: current.phone,
         roles: current.roles,
       })
 

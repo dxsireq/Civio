@@ -22,6 +22,7 @@ import {
   type WorkDay,
 } from '../../api/workDays'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 type TabKey = 'data' | 'services' | 'days'
 
@@ -88,11 +89,9 @@ export function EmployeeDetailPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Сотрудник · {employee.firstName} {employee.lastName}
-        </div>
-      </div>
+      <TopbarLeft>
+        Сотрудник · {employee.firstName} {employee.lastName}
+      </TopbarLeft>
 
       <div className="page">
         <Link to={`/organizations/${orgId}/employees`} className="crumb">

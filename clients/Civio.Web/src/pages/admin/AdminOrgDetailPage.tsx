@@ -11,6 +11,7 @@ import {
   type OrganizationStatus,
 } from '../../api/admin'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 const STATUS_LABEL: Record<OrganizationStatus, string> = {
   pending: 'На модерации',
@@ -139,11 +140,7 @@ export function AdminOrgDetailPage() {
 
   return (
     <>
-      <div className="topbar">
-        <span style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Модерация · Карточка организации
-        </span>
-      </div>
+      <TopbarLeft>Модерация · Карточка организации</TopbarLeft>
 
       <div className="page">
         <Link to="/admin/organizations" className="crumb">

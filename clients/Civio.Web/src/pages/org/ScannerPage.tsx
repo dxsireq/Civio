@@ -6,6 +6,7 @@ import {
   type ScanQrResponse,
 } from '../../api/bookings'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 type State =
   | { kind: 'scanning' }
@@ -146,9 +147,7 @@ export function ScannerPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>Сканер QR</div>
-      </div>
+      <TopbarLeft>Сканер QR</TopbarLeft>
 
       <div
         className="page"

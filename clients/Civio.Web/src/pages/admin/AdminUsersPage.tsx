@@ -7,6 +7,7 @@ import {
   type UserRole,
 } from '../../api/adminUsers'
 import { getErrorMessage } from '../../api/client'
+import { TopbarLeft } from '../../components/Topbar'
 
 type FilterValue = 'all' | UserRole | 'blocked'
 
@@ -143,7 +144,7 @@ export function AdminUsersPage() {
 
   return (
     <>
-      <div className="topbar">
+      <TopbarLeft>
         <div style={{ position: 'relative', width: 320 }}>
           <Search
             size={15}
@@ -163,7 +164,7 @@ export function AdminUsersPage() {
             style={{ paddingLeft: 34, height: 36 }}
           />
         </div>
-      </div>
+      </TopbarLeft>
 
       <div className="page">
         <div className="page-header">

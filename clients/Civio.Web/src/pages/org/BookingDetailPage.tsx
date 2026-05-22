@@ -14,6 +14,7 @@ import {
   BOOKING_STATUS_BADGE,
   BOOKING_STATUS_LABEL,
 } from '../../lib/bookingStatus'
+import { TopbarLeft } from '../../components/Topbar'
 
 function formatRange(startIso: string, endIso: string): string {
   const start = new Date(startIso)
@@ -132,11 +133,7 @@ export function BookingDetailPage() {
 
   return (
     <>
-      <div className="topbar">
-        <div style={{ fontSize: 14, color: 'var(--text-soft)' }}>
-          Бронирование
-        </div>
-      </div>
+      <TopbarLeft>Бронирование</TopbarLeft>
 
       <div className="page">
         <Link to={back} className="crumb">

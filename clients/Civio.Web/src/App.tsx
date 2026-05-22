@@ -21,6 +21,7 @@ import { ServicesPage } from './pages/org/ServicesPage'
 import { BookingsPage } from './pages/org/BookingsPage'
 import { BookingDetailPage } from './pages/org/BookingDetailPage'
 import { ScannerPage } from './pages/org/ScannerPage'
+import { ProfilePage } from './pages/profile/ProfilePage'
 import DesignPreview from './design'
 
 export default function App() {
@@ -54,6 +55,7 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/" element={<MyOrgsPage />} />
           <Route path="/organizations/new" element={<CreateOrgPage />} />
           <Route path="/organizations/:id/edit" element={<EditOrgPage />} />

@@ -51,9 +51,16 @@ export function MyOrgsPage() {
             <LogOut size={14} />
             Выйти
           </button>
-          <span className="avatar">
-            {(user?.firstName?.[0] ?? '') + (user?.lastName?.[0] ?? '')}
-          </span>
+          <Link
+            to="/profile"
+            aria-label="Профиль"
+            title="Профиль"
+            style={{ textDecoration: 'none' }}
+          >
+            <span className="avatar">
+              {(user?.firstName?.[0] ?? '') + (user?.lastName?.[0] ?? '')}
+            </span>
+          </Link>
         </div>
       </div>
 

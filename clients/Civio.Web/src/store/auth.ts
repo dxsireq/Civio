@@ -8,6 +8,8 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
+  middleName: string | null
+  phone: string | null
   roles: string[]
 }
 
