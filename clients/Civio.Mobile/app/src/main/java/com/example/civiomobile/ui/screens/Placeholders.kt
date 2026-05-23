@@ -37,21 +37,6 @@ private fun PlaceholderScaffold(title: String, body: String) {
 
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
-fun BookServiceScreen(orgId: String, onContinue: () -> Unit) =
-    PlaceholderScaffold("Запись на услугу", "Экран 5 — Фаза 3 (id=$orgId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun SelectSlotScreen(orgId: String, onContinue: () -> Unit) =
-    PlaceholderScaffold("Выбор слота", "Экран 6 — Фаза 3 (id=$orgId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun ConfirmBookingScreen(orgId: String, onConfirmed: (String) -> Unit) =
-    PlaceholderScaffold("Подтверждение", "Экран 7 — Фаза 3 (id=$orgId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
 fun BookingsScreen(onOpenBooking: (String) -> Unit) =
     PlaceholderScaffold("Записи", "Экран 8 — Фаза 4")
 

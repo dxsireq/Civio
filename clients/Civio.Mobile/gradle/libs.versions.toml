@@ -33,6 +33,9 @@ securityCrypto = "1.1.0-alpha07"
 # QR
 zxing = "4.3.0"
 
+# Desugaring (java.time on minSdk 24)
+desugarJdkLibs = "2.1.5"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -73,6 +76,9 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 
 # QR (ZXing)
 zxing-android-embedded = { group = "com.journeyapps", name = "zxing-android-embedded", version.ref = "zxing" }
+
+# Desugaring
+desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

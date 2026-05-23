@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
@@ -166,39 +167,47 @@ private fun MainScaffold(onLogout: () -> Unit) {
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(
-                route = Routes.BOOK_SERVICE,
+            navigation(
+                route = Routes.BOOKING_GRAPH,
+                startDestination = Routes.BOOK_SERVICE,
                 arguments = listOf(navArgument("orgId") { type = NavType.StringType })
-            ) { entry ->
-                val orgId = entry.arguments?.getString("orgId").orEmpty()
-                BookServiceScreen(
-                    orgId = orgId,
-                    onContinue = { navController.navigate(Routes.selectSlot(orgId)) }
-                )
-            }
-            composable(
-                route = Routes.SELECT_SLOT,
-                arguments = listOf(navArgument("orgId") { type = NavType.StringType })
-            ) { entry ->
-                val orgId = entry.arguments?.getString("orgId").orEmpty()
-                SelectSlotScreen(
-                    orgId = orgId,
-                    onContinue = { navController.navigate(Routes.confirm(orgId)) }
-                )
-            }
-            composable(
-                route = Routes.CONFIRM,
-                arguments = listOf(navArgument("orgId") { type = NavType.StringType })
-            ) { entry ->
-                val orgId = entry.arguments?.getString("orgId").orEmpty()
-                ConfirmBookingScreen(
-                    orgId = orgId,
-                    onConfirmed = { bookingId ->
-                        navController.navigate(Routes.bookingDetail(bookingId)) {
-                            popUpTo(Routes.CATALOG)
-                        }
+            ) {
+                composable(Routes.BOOK_SERVICE) { entry ->
+                    val parentEntry = remember(entry) {
+                        navController.getBackStackEntry(Routes.BOOKING_GRAPH)
                     }
-                )
+                    val orgId = parentEntry.arguments?.getString("orgId").orEmpty()
+                    BookServiceScreen(
+                        viewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry),
+                        onContinue = { navController.navigate(Routes.selectSlot(orgId)) },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(Routes.SELECT_SLOT) { entry ->
+                    val parentEntry = remember(entry) {
+                        navController.getBackStackEntry(Routes.BOOKING_GRAPH)
+                    }
+                    val orgId = parentEntry.arguments?.getString("orgId").orEmpty()
+                    SelectSlotScreen(
+                        viewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry),
+                        onContinue = { navController.navigate(Routes.confirm(orgId)) },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(Routes.CONFIRM) { entry ->
+                    val parentEntry = remember(entry) {
+                        navController.getBackStackEntry(Routes.BOOKING_GRAPH)
+                    }
+                    ConfirmBookingScreen(
+                        viewModel = androidx.hilt.navigation.compose.hiltViewModel(parentEntry),
+                        onConfirmed = { bookingId ->
+                            navController.navigate(Routes.bookingDetail(bookingId)) {
+                                popUpTo(Routes.CATALOG)
+                            }
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
             }
             composable(Routes.BOOKINGS) {
                 BookingsScreen(onOpenBooking = { id ->
