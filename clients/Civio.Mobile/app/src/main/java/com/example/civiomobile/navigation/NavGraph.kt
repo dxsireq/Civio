@@ -221,7 +221,8 @@ private fun MainScaffold(onLogout: () -> Unit) {
                 val bookingId = entry.arguments?.getString("bookingId").orEmpty()
                 BookingDetailScreen(
                     bookingId = bookingId,
-                    onShowQr = { navController.navigate(Routes.qrCode(bookingId)) }
+                    onShowQr = { navController.navigate(Routes.qrCode(bookingId)) },
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(
@@ -229,7 +230,10 @@ private fun MainScaffold(onLogout: () -> Unit) {
                 arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
             ) { entry ->
                 val bookingId = entry.arguments?.getString("bookingId").orEmpty()
-                QrCodeScreen(bookingId = bookingId)
+                QrCodeScreen(
+                    bookingId = bookingId,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Routes.NOTIFICATIONS) { NotificationsScreen() }
             composable(Routes.PROFILE) { ProfileScreen(onLogout = onLogout) }

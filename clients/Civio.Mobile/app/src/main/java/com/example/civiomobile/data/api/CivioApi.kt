@@ -2,6 +2,7 @@ package com.example.civiomobile.data.api
 
 import com.example.civiomobile.data.api.dto.AuthResponse
 import com.example.civiomobile.data.api.dto.AvailableSlotResponse
+import com.example.civiomobile.data.api.dto.BookingQrResponse
 import com.example.civiomobile.data.api.dto.BookingResponse
 import com.example.civiomobile.data.api.dto.BookingSummaryResponse
 import com.example.civiomobile.data.api.dto.CreateBookingRequest
@@ -54,4 +55,7 @@ interface CivioApi {
 
     @POST("api/bookings/{id}/cancel")
     suspend fun cancelBooking(@Path("id") id: String): BookingResponse
+
+    @GET("api/bookings/{id}/qr")
+    suspend fun getBookingQr(@Path("id") id: String): BookingQrResponse
 }

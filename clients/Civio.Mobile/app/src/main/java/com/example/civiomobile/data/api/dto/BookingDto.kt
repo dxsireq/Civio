@@ -33,6 +33,11 @@ data class BookingResponse(
     val createdAt: String
 )
 
+data class BookingQrResponse(
+    val bookingId: String,
+    val token: String
+)
+
 data class BookingSummaryResponse(
     val id: String,
     val organizationId: String,

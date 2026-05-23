@@ -37,21 +37,6 @@ private fun PlaceholderScaffold(title: String, body: String) {
 
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
-fun BookingsScreen(onOpenBooking: (String) -> Unit) =
-    PlaceholderScaffold("Записи", "Экран 8 — Фаза 4")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun BookingDetailScreen(bookingId: String, onShowQr: () -> Unit) =
-    PlaceholderScaffold("Запись", "Экран 9 — Фаза 4 (id=$bookingId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
-fun QrCodeScreen(bookingId: String) =
-    PlaceholderScaffold("QR-код", "Экран 10 — Фаза 4 (id=$bookingId)")
-
-@androidx.compose.material3.ExperimentalMaterial3Api
-@Composable
 fun NotificationsScreen() =
     PlaceholderScaffold("Уведомления", "Экран 11 — Фаза 5")
 

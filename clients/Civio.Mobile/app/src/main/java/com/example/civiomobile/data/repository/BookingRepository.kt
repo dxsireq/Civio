@@ -2,6 +2,7 @@ package com.example.civiomobile.data.repository
 
 import com.example.civiomobile.data.api.CivioApi
 import com.example.civiomobile.data.api.dto.AvailableSlotResponse
+import com.example.civiomobile.data.api.dto.BookingQrResponse
 import com.example.civiomobile.data.api.dto.BookingResponse
 import com.example.civiomobile.data.api.dto.BookingSummaryResponse
 import com.example.civiomobile.data.api.dto.CreateBookingRequest
@@ -26,4 +27,6 @@ class BookingRepository @Inject constructor(
     suspend fun byId(id: String): BookingResponse = api.getBooking(id)
 
     suspend fun cancel(id: String): BookingResponse = api.cancelBooking(id)
+
+    suspend fun qr(id: String): BookingQrResponse = api.getBookingQr(id)
 }
