@@ -134,17 +134,17 @@ e2e гражданина: регистрация → поиск организа
 
 ### Фаза 5 — Уведомления и профиль
 
-- [ ] **Экран 11: Уведомления** `NotificationsScreen` (tab: Уведомления)
-  - [ ] Вёрстка из файла дизайна
-  - [ ] GET `/api/notifications/my`
-  - [ ] `LazyColumn`: иконка типа, заголовок, текст, дата
-  - [ ] `SwipeRefresh`
-  - [ ] Пустое состояние
+- [x] **Экран 11: Уведомления** `NotificationsScreen` (tab: Уведомления)
+  - [x] Вёрстка из файла дизайна
+  - [x] GET `/api/notifications/my`
+  - [x] `LazyColumn`: иконка типа, заголовок, текст, дата
+  - [x] `SwipeRefresh`
+  - [x] Пустое состояние
 
-- [ ] **Экран 12: Профиль** `ProfileScreen` (tab: Профиль)
-  - [ ] Вёрстка из файла дизайна
-  - [ ] GET `/api/auth/me` → имя, email, телефон
-  - [ ] Кнопка «Выйти» → AlertDialog → TokenStorage.clear() → navigate to login
+- [x] **Экран 12: Профиль** `ProfileScreen` (tab: Профиль)
+  - [x] Вёрстка из файла дизайна
+  - [x] GET `/api/auth/me` → имя, email, телефон
+  - [x] Кнопка «Выйти» → AlertDialog → TokenStorage.clear() → navigate to login
 
 ---
 

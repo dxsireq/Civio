@@ -8,6 +8,7 @@ import com.example.civiomobile.data.api.dto.BookingSummaryResponse
 import com.example.civiomobile.data.api.dto.CreateBookingRequest
 import com.example.civiomobile.data.api.dto.CurrentUserResponse
 import com.example.civiomobile.data.api.dto.LoginRequest
+import com.example.civiomobile.data.api.dto.NotificationResponse
 import com.example.civiomobile.data.api.dto.OrganizationResponse
 import com.example.civiomobile.data.api.dto.RegisterRequest
 import com.example.civiomobile.data.api.dto.ServiceResponse
@@ -58,4 +59,7 @@ interface CivioApi {
 
     @GET("api/bookings/{id}/qr")
     suspend fun getBookingQr(@Path("id") id: String): BookingQrResponse
+
+    @GET("api/notifications/my")
+    suspend fun getMyNotifications(): List<NotificationResponse>
 }
