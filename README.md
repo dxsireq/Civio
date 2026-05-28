@@ -1,7 +1,9 @@
 **Подготовка системы (Arch)**
 
-sudo pacman -Syu
-sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm
+***Установка всех средств***
+
+`sudo pacman -Syu
+sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm`
 
 yay -S waydroid
 sudo waydroid init
@@ -13,8 +15,8 @@ reboot
 
 **Порядок запуска**
 
-cd Civio
-cp .env.example .env
+`cd Civio`
+`cp .env.example .env` 
 
 docker compose up -d
 docker ps
@@ -33,13 +35,16 @@ http://localhost:5173
 
 waydroid session start
 waydroid show-full-ui
-wayland status
-adb connect 192.168.240.100:5555
+waydroid status
+sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ifconfig eth0
+sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ifconfig eth0 192.168.240.100 netmask 255.255.255.0
+sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ip route add default via 192.168.240.1
+adb connect 192.168.240.100:5555 -> confirm on waydroid ui
+adb reverse tcp:5214 tcp:5214
 adb logcat --clear && adb logcat | grep -E "E/|FATAL|AndroidRuntime"
 cd Civio/clients/Civio.Mobile
 ./gradlew assembleDebug --warning-mode all
 adb install app/build/outputs/apk/debug/app-debug.apk
-adb reverse tcp:5214 tcp:5214
 
 **Данные для входа:**
   owner@civio.test      / Test1234!  — owns org1 (approved) + org2 (approved)
