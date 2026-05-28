@@ -14,6 +14,7 @@ export function MyOrgsPage() {
   const isAdmin = user?.roles.includes('PlatformAdmin') ?? false
   const [orgs, setOrgs] = useState<Organization[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -64,7 +65,7 @@ export function MyOrgsPage() {
               Админ-панель
             </Link>
           )}
-          <button className="btn btn-ghost btn-sm" onClick={onLogout}>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowLogoutConfirm(true)}>
             <LogOut size={14} />
             Выйти
           </button>
@@ -183,6 +184,53 @@ export function MyOrgsPage() {
           </div>
         )}
       </div>
+
+      {showLogoutConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 'var(--r-lg)',
+              padding: 24,
+              width: '100%',
+              maxWidth: 360,
+              margin: 16,
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+              Выйти из аккаунта?
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--text-soft)', marginBottom: 20 }}>
+              Вы будете перенаправлены на страницу входа.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Отмена
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={onLogout}>
+                <LogOut size={14} />
+                Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

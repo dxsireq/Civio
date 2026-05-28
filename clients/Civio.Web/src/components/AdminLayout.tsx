@@ -22,6 +22,7 @@ export function AdminLayout() {
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const [topbarLeftEl, setTopbarLeftEl] = useState<HTMLDivElement | null>(null)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const onLogout = () => {
     logout()
@@ -95,7 +96,7 @@ export function AdminLayout() {
               <button
                 className="btn btn-ghost btn-sm"
                 style={{ padding: 6 }}
-                onClick={onLogout}
+                onClick={() => setShowLogoutConfirm(true)}
                 aria-label="Выйти"
               >
                 <LogOut size={14} />
@@ -146,6 +147,52 @@ export function AdminLayout() {
           </TopbarSlotContext.Provider>
         </main>
       </div>
+      {showLogoutConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 'var(--r-lg)',
+              padding: 24,
+              width: '100%',
+              maxWidth: 360,
+              margin: 16,
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+              Выйти из аккаунта?
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--text-soft)', marginBottom: 20 }}>
+              Вы будете перенаправлены на страницу входа.
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                Отмена
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={onLogout}>
+                <LogOut size={14} />
+                Выйти
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
