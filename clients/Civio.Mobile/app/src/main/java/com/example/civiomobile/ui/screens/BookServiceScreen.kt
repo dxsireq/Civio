@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -102,19 +103,44 @@ fun BookServiceScreen(
                         Spacer(Modifier.height(24.dp))
                         SectionLabel("ДАТА")
 
-                        val today = LocalDate.now()
-                        val dates = (0 until 14).map { today.plusDays(it.toLong()) }
-                        LazyRow(
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(dates, key = { it.toString() }) { d ->
-                                DateChip(
-                                    date = d,
-                                    isToday = d == today,
-                                    selected = d == state.selectedDate,
-                                    onClick = { viewModel.selectDate(d) }
+                        when {
+                            state.datesLoading -> Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(72.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
+                            state.availableDates.isEmpty() -> Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(72.dp)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = "Нет доступных дат",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            }
+                            else -> {
+                                val today = LocalDate.now()
+                                val dates = state.availableDates.sorted()
+                                LazyRow(
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(dates, key = { it.toString() }) { d ->
+                                        DateChip(
+                                            date = d,
+                                            isToday = d == today,
+                                            selected = d == state.selectedDate,
+                                            onClick = { viewModel.selectDate(d) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -132,7 +158,7 @@ fun BookServiceScreen(
                                 viewModel.loadSlots()
                                 onContinue()
                             },
-                            enabled = state.selectedServiceId != null,
+                            enabled = state.selectedServiceId != null && state.selectedDate in state.availableDates,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }

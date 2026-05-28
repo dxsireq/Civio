@@ -12,6 +12,7 @@ import com.example.civiomobile.data.repository.BookingRepository
 import com.example.civiomobile.data.repository.OrganizationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,6 +36,9 @@ data class BookingFlowState(
     val slotsError: String? = null,
 
     val selectedSlot: AvailableSlotResponse? = null,
+
+    val availableDates: Set<LocalDate> = emptySet(),
+    val datesLoading: Boolean = false,
 
     val submitting: Boolean = false,
     val submitError: String? = null,
@@ -68,23 +72,57 @@ class BookingFlowViewModel @Inject constructor(
             }
                 .onSuccess { (org, svc) ->
                     val active = svc.filter { it.isActive }
+                    val initialServiceId = active.firstOrNull()?.id
                     _state.update {
                         it.copy(
                             loading = false,
                             org = org,
                             services = active,
-                            selectedServiceId = it.selectedServiceId ?: active.firstOrNull()?.id
+                            selectedServiceId = it.selectedServiceId ?: initialServiceId
                         )
                     }
+                    _state.value.selectedServiceId?.let { loadAvailableDates(it) }
                 }
                 .onFailure { e -> _state.update { it.copy(loading = false, error = e.message) } }
         }
     }
 
     fun selectService(serviceId: String) {
+        if (_state.value.selectedServiceId == serviceId) return
         _state.update {
-            if (it.selectedServiceId == serviceId) it
-            else it.copy(selectedServiceId = serviceId, slots = emptyList(), selectedSlot = null)
+            it.copy(
+                selectedServiceId = serviceId,
+                slots = emptyList(),
+                selectedSlot = null,
+                availableDates = emptySet()
+            )
+        }
+        loadAvailableDates(serviceId)
+    }
+
+    private fun loadAvailableDates(serviceId: String) {
+        val today = LocalDate.now()
+        val datesToCheck = (0 until 14).map { today.plusDays(it.toLong()) }
+        viewModelScope.launch {
+            _state.update { it.copy(datesLoading = true) }
+            val available = datesToCheck.map { date ->
+                async {
+                    runCatching {
+                        bookingRepository.availableSlots(orgId, serviceId, date.toString())
+                    }.getOrDefault(emptyList()).let { if (it.isNotEmpty()) date else null }
+                }
+            }.awaitAll().filterNotNull().toSet()
+            _state.update { current ->
+                val newDate = if (current.selectedDate in available) current.selectedDate
+                              else datesToCheck.firstOrNull { it in available } ?: current.selectedDate
+                current.copy(
+                    datesLoading = false,
+                    availableDates = available,
+                    selectedDate = newDate,
+                    slots = emptyList(),
+                    selectedSlot = null
+                )
+            }
         }
     }
 
