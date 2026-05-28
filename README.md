@@ -1,14 +1,16 @@
 **Подготовка системы (Arch)**
 
-***Установка всех средств***
+***1. Установка всех средств***
 
-`sudo pacman -Syu
+`sudo pacman -Syu`
 
-sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm`
+`sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm`
 
-yay -S waydroid
-sudo waydroid init
-sudo systemctl enable --now waydroid-container
+***2. Установка эмулятора*** 
+`yay -S waydroid`
+
+ёsudo waydroid init`
+sudo systemctl start waydroid-container
 
 sudo systemctl start docker.service
 sudo usermod -aG docker $USER
@@ -17,6 +19,7 @@ reboot
 **Порядок запуска**
 
 `cd Civio`
+
 `cp .env.example .env` 
 
 docker compose up -d
