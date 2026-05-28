@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+apply(plugin = "org.jetbrains.kotlin.android")
+
 android {
     namespace = "com.example.civiomobile"
     compileSdk = 36
@@ -20,12 +22,12 @@ android {
 
         // Base URL for Civio API. Override per build type as needed.
         // 10.0.2.2 maps emulator -> host machine localhost.
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://localhost:5214/\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://localhost:5214/\"")
         }
         release {
             isMinifyEnabled = false
@@ -33,7 +35,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:5000/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://localhost:5214/\"")
         }
     }
     compileOptions {
@@ -93,3 +95,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
+}
+
