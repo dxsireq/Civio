@@ -3,6 +3,7 @@
 ***Установка всех средств***
 
 `sudo pacman -Syu
+
 sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm`
 
 yay -S waydroid
