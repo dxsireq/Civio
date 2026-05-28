@@ -1,64 +1,187 @@
-**Подготовка системы (Arch)**
+<h1 align="center">Civio</h1>
 
-***1. Установка всех средств***
+<p align="center">
+  Платформа управления организациями и записью на услуги
+</p>
 
-`sudo pacman -Syu`
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?style=flat-square&logo=dotnet" alt=".NET 10"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React"/>
+  <img src="https://img.shields.io/badge/Android-Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Android"/>
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/>
+</p>
 
-`sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm`
+---
 
-***2. Установка эмулятора*** 
-`yay -S waydroid`
+## Обзор
 
-ёsudo waydroid init`
-sudo systemctl start waydroid-container
+Civio — система для управления организациями, сотрудниками и онлайн-записью граждан на услуги. Включает REST API, веб-панель и мобильное Android-приложение.
 
-sudo systemctl start docker.service
-sudo usermod -aG docker $USER
-reboot
+**Роли пользователей:**
+- **PlatformAdmin** — модерация организаций, управление пользователями
+- **OrganizationOwner** — управление своей организацией, сотрудниками, расписанием и услугами
+- **OrganizationEmployee** — просмотр записей, управление слотами
+- **Citizen** — поиск организаций, запись на услуги
 
-**Порядок запуска**
+---
 
-`cd Civio`
+## Стек технологий
 
-`cp .env.example .env` 
+| Слой | Технологии |
+|------|-----------|
+| **Backend** | .NET 10 · ASP.NET Core Minimal API · EF Core · JWT Bearer |
+| **База данных** | PostgreSQL 16 · SQL-first (без migrations) |
+| **Веб-клиент** | React 19 · TypeScript · Vite · TailwindCSS |
+| **Мобильный клиент** | Android · Kotlin · Jetpack Compose |
+| **Инфраструктура** | Docker · Docker Compose |
 
+---
+
+## Архитектура
+
+Бэкенд построен по **Clean Architecture**:
+
+```
+Civio.sln
+├── src/
+│   ├── Civio.Api/            # Endpoints — только оркестрация
+│   ├── Civio.Application/    # Интерфейсы + use-cases
+│   ├── Civio.Domain/         # Сущности и бизнес-правила
+│   ├── Civio.Infrastructure/ # EF Core, реализации сервисов, DI
+│   └── Civio.Contracts/      # DTO (request / response)
+├── clients/
+│   ├── Civio.Web/            # React веб-клиент
+│   └── Civio.Mobile/         # Android приложение
+└── database/
+    └── init.sql              # Полная схема БД
+```
+
+---
+
+## Быстрый старт
+
+### Предварительные требования
+
+- [Docker](https://docs.docker.com/get-docker/) + Docker Compose
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Node.js](https://nodejs.org/) 20+
+- Android Studio (для мобильного клиента)
+
+### 1. Клонирование и настройка
+
+```bash
+git clone https://github.com/dxsireq/Civio.git
+cd Civio
+cp .env.example .env
+```
+
+### 2. База данных
+
+```bash
 docker compose up -d
+
+# Проверка
 docker ps
 docker exec -it civio-system-postgres psql -U civio_user -d civio_system -c "\dt"
+```
 
+### 3. Backend API
+
+```bash
 dotnet restore
 dotnet build
 dotnet run --project src/Civio.Api/Civio.Api.csproj
-http://localhost:5214/swagger
+```
 
-cd Civio/clients/Civio.Web
+Swagger UI доступен по адресу: `http://localhost:5214/swagger`
+
+### 4. Веб-клиент
+
+```bash
+cd clients/Civio.Web
 npm install
 cp .env.example .env
 npm run dev
-http://localhost:5173
+```
 
+Открыть: `http://localhost:5173`
+
+### 5. Мобильный клиент (Waydroid / устройство) | Или использовать Android Studio
+
+```bash
+# Запуск эмулятора Waydroid
 waydroid session start
 waydroid show-full-ui
-waydroid status
-sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ifconfig eth0
+
+# Настройка сети (если нужен ADB через Waydroid)
 sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ifconfig eth0 192.168.240.100 netmask 255.255.255.0
 sudo lxc-attach -P /var/lib/waydroid/lxc -n waydroid -- /system/bin/ip route add default via 192.168.240.1
-adb connect 192.168.240.100:5555 -> confirm on waydroid ui
-adb reverse tcp:5214 tcp:5214
-adb logcat --clear && adb logcat | grep -E "E/|FATAL|AndroidRuntime"
-cd Civio/clients/Civio.Mobile
-./gradlew assembleDebug --warning-mode all
-adb install app/build/outputs/apk/debug/app-debug.apk
+adb connect 192.168.240.100:5555
 
-**Данные для входа:**
-  owner@civio.test      / Test1234!  — owns org1 (approved) + org2 (approved)
-  employee@civio.test   / Test1234!  — works in org1 (emp1)
-  client@civio.test     / Test1234!  — citizen with bookings (created, confirmed, cancelled)
-  admin@civio.test      / Test1234!  — PlatformAdmin
-  owner2@civio.test     / Test1234!  — owns org3 (pending moderation)
-  owner3@civio.test     / Test1234!  — owns org4 (rejected)
-  owner4@civio.test     / Test1234!  — owns org5 (blocked)
-  employee2@civio.test  / Test1234!  — no employee link (free citizen, OrganizationEmployee role)
-  employee3@civio.test  / Test1234!  — works in org2 (emp3)
-  client2@civio.test    / Test1234!  — citizen with completed + rejected bookings
-  client3@civio.test    / Test1234!  — clean citizen (no bookings)
+# Проброс порта API
+adb reverse tcp:5214 tcp:5214
+
+# Сборка и установка
+cd clients/Civio.Mobile
+./gradlew assembleDebug
+adb install app/build/outputs/apk/debug/app-debug.apk
+```
+
+---
+
+## API
+
+| Группа | Endpoints |
+|--------|-----------|
+| Auth | Регистрация, вход, профиль |
+| Organizations | CRUD организаций, модерация |
+| Services | Услуги организации |
+| Employees | Сотрудники и привязка к организации |
+| Schedule | Шаблоны расписания, рабочие дни |
+| Slots | Временные слоты для записи |
+| Bookings | Создание и управление записями |
+| Notifications | Уведомления пользователя |
+| Admin | Управление пользователями, лог активности |
+
+Полная документация: `http://localhost:5214/swagger`
+
+---
+
+## Тестовые аккаунты
+
+Все аккаунты используют пароль: `Test1234!`
+
+| Email | Роль | Описание |
+|-------|------|----------|
+| `admin@civio.test` | PlatformAdmin | Администратор платформы |
+| `owner@civio.test` | OrganizationOwner | Владелец org1 и org2 (approved) |
+| `owner2@civio.test` | OrganizationOwner | Владелец org3 (на модерации) |
+| `owner3@civio.test` | OrganizationOwner | Владелец org4 (отклонён) |
+| `owner4@civio.test` | OrganizationOwner | Владелец org5 (заблокирован) |
+| `employee@civio.test` | OrganizationEmployee | Сотрудник org1 |
+| `employee2@civio.test` | OrganizationEmployee | Без привязки к организации |
+| `employee3@civio.test` | OrganizationEmployee | Сотрудник org2 |
+| `client@civio.test` | Citizen | Записи: created, confirmed, cancelled |
+| `client2@civio.test` | Citizen | Записи: completed, rejected |
+| `client3@civio.test` | Citizen | Нет записей |
+
+---
+
+## Установка зависимостей (Arch Linux)
+
+```bash
+sudo pacman -Syu
+sudo pacman -S git docker docker-compose dotnet-sdk aspnet-runtime nodejs npm
+
+# Docker без sudo
+sudo usermod -aG docker $USER
+sudo systemctl enable --now docker
+
+# Waydroid (Android эмулятор)
+yay -S waydroid
+sudo waydroid init
+sudo systemctl enable --now waydroid-container
+
+reboot
+```
