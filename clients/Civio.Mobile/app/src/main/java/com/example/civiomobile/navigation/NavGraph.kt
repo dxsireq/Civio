@@ -169,8 +169,7 @@ private fun MainScaffold(onLogout: () -> Unit) {
             }
             navigation(
                 route = Routes.BOOKING_GRAPH,
-                startDestination = Routes.BOOK_SERVICE,
-                arguments = listOf(navArgument("orgId") { type = NavType.StringType })
+                startDestination = Routes.BOOK_SERVICE
             ) {
                 composable(Routes.BOOK_SERVICE) { entry ->
                     val parentEntry = remember(entry) {
