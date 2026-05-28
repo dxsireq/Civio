@@ -285,10 +285,13 @@ public sealed class EmployeeService : IEmployeeService
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
-        return await _dbContext.EmployeeServices
+        var links = await _dbContext.EmployeeServices
             .AsNoTracking()
             .Where(es => es.EmployeeId == employeeId)
-            .Select(es => new ServiceResponse(
+            .Include(es => es.Service)
+            .ToListAsync(cancellationToken);
+
+        return links.Select(es => new ServiceResponse(
                 es.Service.Id,
                 es.Service.OrganizationId,
                 es.Service.CategoryId,
@@ -298,7 +301,7 @@ public sealed class EmployeeService : IEmployeeService
                 es.Service.Price,
                 es.Service.IsActive,
                 es.Service.CreatedAt.UtcDateTime))
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 
     private static EmployeeResponse ToResponse(Employee e) =>
