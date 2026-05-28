@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   Building2,
+  LayoutDashboard,
   LogOut,
   ScrollText,
   User as UserIcon,
@@ -116,6 +117,15 @@ export function AdminLayout() {
                 flex: 1,
               }}
             />
+            <Link
+              to="/"
+              className="btn btn-ghost btn-sm"
+              title="Основной интерфейс"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 8 }}
+            >
+              <LayoutDashboard size={14} />
+              Основной интерфейс
+            </Link>
             <Link
               to="/profile"
               aria-label="Профиль"

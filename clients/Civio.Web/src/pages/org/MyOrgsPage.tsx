@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Plus } from 'lucide-react'
+import { LogOut, Plus, Shield } from 'lucide-react'
 import { getMyOrganizations } from '../../api/organizations'
 import type { Organization } from '../../api/admin'
 import { useAuthStore } from '../../store/auth'
@@ -11,6 +11,7 @@ export function MyOrgsPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const isAdmin = user?.roles.includes('PlatformAdmin') ?? false
   const [orgs, setOrgs] = useState<Organization[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,6 +48,22 @@ export function MyOrgsPage() {
           Civio
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {isAdmin && (
+            <Link
+              to="/admin/organizations"
+              className="btn btn-ghost btn-sm"
+              title="Админ-панель"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                textDecoration: 'none',
+              }}
+            >
+              <Shield size={14} />
+              Админ-панель
+            </Link>
+          )}
           <button className="btn btn-ghost btn-sm" onClick={onLogout}>
             <LogOut size={14} />
             Выйти

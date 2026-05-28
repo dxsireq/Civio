@@ -6,6 +6,7 @@ import {
   LogOut,
   QrCode,
   Scissors,
+  Shield,
   User as UserIcon,
   Users,
 } from 'lucide-react'
@@ -23,6 +24,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
+  const isAdmin = user?.roles.includes('PlatformAdmin') ?? false
   const [topbarLeftEl, setTopbarLeftEl] = useState<HTMLDivElement | null>(null)
 
   const onLogout = () => {
@@ -130,6 +132,17 @@ export function AppLayout() {
                 flex: 1,
               }}
             />
+            {isAdmin && (
+              <Link
+                to="/admin/organizations"
+                className="btn btn-ghost btn-sm"
+                title="Админ-панель"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              >
+                <Shield size={14} />
+                Админ-панель
+              </Link>
+            )}
             <Link
               to="/profile"
               aria-label="Профиль"
