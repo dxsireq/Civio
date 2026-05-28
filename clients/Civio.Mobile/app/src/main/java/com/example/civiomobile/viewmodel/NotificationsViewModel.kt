@@ -58,4 +58,8 @@ class NotificationsViewModel @Inject constructor(
                 .onFailure { _state.update { it.copy(refreshing = false) } }
         }
     }
+
+    fun refreshIfLoaded() {
+        if (!_state.value.loading) refresh()
+    }
 }

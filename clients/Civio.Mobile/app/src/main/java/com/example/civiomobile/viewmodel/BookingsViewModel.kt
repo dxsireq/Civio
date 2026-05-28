@@ -76,4 +76,8 @@ class BookingsViewModel @Inject constructor(
     fun setFilter(filter: BookingFilter) {
         _state.update { it.copy(filter = filter) }
     }
+
+    fun refreshIfLoaded() {
+        if (!_state.value.loading) refresh()
+    }
 }

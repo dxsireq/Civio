@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 data class ProfileState(
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val user: CurrentUserResponse? = null,
     val error: String? = null
 )
@@ -37,5 +38,18 @@ class ProfileViewModel @Inject constructor(
                 .onSuccess { user -> _state.update { it.copy(loading = false, user = user) } }
                 .onFailure { e -> _state.update { it.copy(loading = false, error = e.message ?: "Не удалось загрузить") } }
         }
+    }
+
+    fun refresh() {
+        viewModelScope.launch {
+            _state.update { it.copy(refreshing = true) }
+            runCatching { repository.me() }
+                .onSuccess { user -> _state.update { it.copy(refreshing = false, user = user) } }
+                .onFailure { _state.update { it.copy(refreshing = false) } }
+        }
+    }
+
+    fun refreshIfLoaded() {
+        if (!_state.value.loading) refresh()
     }
 }

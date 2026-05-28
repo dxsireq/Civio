@@ -56,4 +56,8 @@ class OrganizationsViewModel @Inject constructor(
         val current = _state.value as? OrganizationsState.Ready ?: return
         _state.value = current.copy(query = query)
     }
+
+    fun refreshIfLoaded() {
+        if (_state.value !is OrganizationsState.Loading) refresh()
+    }
 }
