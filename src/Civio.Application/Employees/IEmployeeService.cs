@@ -54,4 +54,8 @@ public interface IEmployeeService
         Guid organizationId,
         Guid requestingUserId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<EmployeeWithOrgResponse>> GetMyAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }

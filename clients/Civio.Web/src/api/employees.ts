@@ -1,6 +1,21 @@
 import { api } from './client'
 import type { Service } from './services'
 
+export interface EmployeeWithOrg {
+  id: string
+  organizationId: string
+  organizationName: string
+  organizationCity: string
+  organizationStatus: string
+  firstName: string
+  lastName: string
+  middleName: string | null
+  position: string | null
+  phone: string | null
+  email: string | null
+  isActive: boolean
+}
+
 export interface Employee {
   id: string
   organizationId: string
@@ -26,6 +41,11 @@ export interface CreateEmployeeRequest {
 }
 
 export type UpdateEmployeeRequest = Omit<CreateEmployeeRequest, 'userId'>
+
+export async function getMyEmployeeRecords(): Promise<EmployeeWithOrg[]> {
+  const res = await api.get<EmployeeWithOrg[]>('/api/employees/me')
+  return res.data
+}
 
 export async function getEmployees(orgId: string): Promise<Employee[]> {
   const res = await api.get<Employee[]>(

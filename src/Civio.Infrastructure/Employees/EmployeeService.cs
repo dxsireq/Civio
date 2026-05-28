@@ -304,6 +304,32 @@ public sealed class EmployeeService : IEmployeeService
             .ToList();
     }
 
+    public async Task<IReadOnlyList<EmployeeWithOrgResponse>> GetMyAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Employees
+            .AsNoTracking()
+            .Where(e => e.UserId == userId && e.IsActive)
+            .Include(e => e.Organization)
+            .ThenInclude(o => o.Status)
+            .OrderBy(e => e.Organization.Name)
+            .Select(e => new EmployeeWithOrgResponse(
+                e.Id,
+                e.OrganizationId,
+                e.Organization.Name,
+                e.Organization.City,
+                e.Organization.Status.Code,
+                e.FirstName,
+                e.LastName,
+                e.MiddleName,
+                e.Position,
+                e.Phone,
+                e.Email,
+                e.IsActive))
+            .ToListAsync(cancellationToken);
+    }
+
     private static EmployeeResponse ToResponse(Employee e) =>
         new(
             e.Id,

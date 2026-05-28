@@ -9,6 +9,10 @@ public static class EmployeeEndpoints
 {
     public static IEndpointRouteBuilder MapEmployeeEndpoints(this IEndpointRouteBuilder app)
     {
+        app.MapGet("/api/employees/me", GetMyEmployeesAsync)
+            .WithTags("Employees")
+            .RequireAuthorization();
+
         var group = app
             .MapGroup("/api/organizations/{orgId:guid}/employees")
             .WithTags("Employees")
@@ -24,6 +28,18 @@ public static class EmployeeEndpoints
         group.MapDelete("/{id:guid}/services/{serviceId:guid}", UnassignServiceAsync);
 
         return app;
+    }
+
+    private static async Task<IResult> GetMyEmployeesAsync(
+        ClaimsPrincipal user,
+        IEmployeeService employeeService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        var records = await employeeService.GetMyAsync(userId, cancellationToken);
+        return Results.Ok(records);
     }
 
     private static async Task<IResult> CreateEmployeeAsync(

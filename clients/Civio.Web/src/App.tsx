@@ -22,6 +22,10 @@ import { BookingsPage } from './pages/org/BookingsPage'
 import { BookingDetailPage } from './pages/org/BookingDetailPage'
 import { ScannerPage } from './pages/org/ScannerPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
+import { EmployeeLayout } from './components/EmployeeLayout'
+import { EmployeeDashboardPage } from './pages/employee/EmployeeDashboardPage'
+import { MySchedulePage } from './pages/employee/MySchedulePage'
+import { EmployeeBookingsPage } from './pages/employee/EmployeeBookingsPage'
 import DesignPreview from './design'
 
 export default function App() {
@@ -55,6 +59,13 @@ export default function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          <Route path="/employee/:id" element={<EmployeeLayout />}>
+            <Route index element={<EmployeeDashboardPage />} />
+            <Route path="schedule" element={<MySchedulePage />} />
+            <Route path="bookings" element={<EmployeeBookingsPage />} />
+            <Route path="bookings/:bookingId" element={<BookingDetailPage />} />
+            <Route path="scan" element={<ScannerPage />} />
+          </Route>
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/" element={<MyOrgsPage />} />
           <Route path="/organizations/new" element={<CreateOrgPage />} />
