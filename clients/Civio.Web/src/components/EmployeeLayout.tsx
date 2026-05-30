@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom'
 import { Calendar, Home, LogOut, QrCode, Scissors, Shield, User as UserIcon } from 'lucide-react'
 import { useAuthStore } from '../store/auth'

@@ -6,6 +6,7 @@ using Civio.Application.Organizations;
 using Civio.Application.Schedule;
 using Civio.Application.Services;
 using Civio.Application.Slots;
+using Civio.Application.Statistics;
 using Civio.Infrastructure.Admin;
 using Civio.Infrastructure.Bookings;
 using Civio.Infrastructure.Employees;
@@ -15,6 +16,7 @@ using Civio.Infrastructure.Persistence;
 using Civio.Infrastructure.Schedule;
 using Civio.Infrastructure.Services;
 using Civio.Infrastructure.Slots;
+using Civio.Infrastructure.Statistics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<SlotCalculationService>();
         services.AddScoped<IAvailableSlotsService, AvailableSlotsService>();
         services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<IOrganizationStatisticsService, OrganizationStatisticsService>();
 
         return services;
     }

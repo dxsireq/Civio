@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
 import {
+  BarChart3,
   Calendar,
   Home,
   LogOut,
@@ -68,6 +69,10 @@ export function AppLayout() {
             <NavLink to={`${base}/scan`} className={linkClass}>
               <QrCode size={16} />
               Сканер QR
+            </NavLink>
+            <NavLink to={`${base}/stats`} className={linkClass}>
+              <BarChart3 size={16} />
+              Статистика
             </NavLink>
           </nav>
           <div className="sidebar-foot">

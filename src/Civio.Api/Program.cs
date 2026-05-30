@@ -213,6 +213,7 @@ app.MapNotificationEndpoints();
 app.MapAdminEndpoints();
 app.MapAdminUserEndpoints();
 app.MapAdminActivityLogEndpoints();
+app.MapOrganizationStatisticsEndpoints();
 
 app.UseSwagger();
 app.UseSwaggerUI();

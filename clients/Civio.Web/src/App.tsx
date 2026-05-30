@@ -21,6 +21,7 @@ import { ServicesPage } from './pages/org/ServicesPage'
 import { BookingsPage } from './pages/org/BookingsPage'
 import { BookingDetailPage } from './pages/org/BookingDetailPage'
 import { ScannerPage } from './pages/org/ScannerPage'
+import { OrgStatsPage } from './pages/org/OrgStatsPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { EmployeeLayout } from './components/EmployeeLayout'
 import { EmployeeDashboardPage } from './pages/employee/EmployeeDashboardPage'
@@ -84,6 +85,7 @@ export default function App() {
               element={<BookingDetailPage />}
             />
             <Route path="scan" element={<ScannerPage />} />
+            <Route path="stats" element={<OrgStatsPage />} />
           </Route>
         </Route>
 

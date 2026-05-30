@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BarChart3, Pencil } from 'lucide-react'
 import { TopbarLeft } from '../../components/Topbar'
 import {
   getOrganization,
@@ -177,13 +177,22 @@ export function OrgDashboardPage() {
               {org.city} · {org.address}
             </div>
           </div>
-          <Link
-            to={`/organizations/${id}/edit`}
-            className="btn btn-secondary btn-sm"
-          >
-            <Pencil size={13} />
-            Редактировать
-          </Link>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link
+              to={`/organizations/${id}/stats`}
+              className="btn btn-secondary btn-sm"
+            >
+              <BarChart3 size={13} />
+              Статистика
+            </Link>
+            <Link
+              to={`/organizations/${id}/edit`}
+              className="btn btn-secondary btn-sm"
+            >
+              <Pencil size={13} />
+              Редактировать
+            </Link>
+          </div>
         </div>
 
         <div
