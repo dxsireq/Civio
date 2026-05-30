@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IAvailableSlotsService, AvailableSlotsService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<IOrganizationStatisticsService, OrganizationStatisticsService>();
+        services.AddScoped<IPlatformStatisticsService, PlatformStatisticsService>();
 
         return services;
     }

@@ -20,7 +20,8 @@ public sealed class OrganizationStatisticsService : IOrganizationStatisticsServi
         Guid requestingUserId,
         DateTimeOffset from,
         DateTimeOffset to,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool bypassOwnerCheck = false)
     {
         if (from >= to)
             throw new InvalidOperationException("Invalid date range.");
@@ -32,7 +33,7 @@ public sealed class OrganizationStatisticsService : IOrganizationStatisticsServi
         if (org is null)
             throw new KeyNotFoundException($"Organization {organizationId} not found.");
 
-        if (!OrganizationAccess.IsOwner(requestingUserId, org))
+        if (!bypassOwnerCheck && !OrganizationAccess.IsOwner(requestingUserId, org))
             throw new UnauthorizedAccessException("Access denied.");
 
         var fromUtc = from.ToUniversalTime();

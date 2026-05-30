@@ -11,6 +11,8 @@ import { AdminOrgDetailPage } from './pages/admin/AdminOrgDetailPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminUserDetailPage } from './pages/admin/AdminUserDetailPage'
 import { ActivityLogPage } from './pages/admin/ActivityLogPage'
+import { AdminStatisticsPage } from './pages/admin/AdminStatisticsPage'
+import { AdminOrgStatisticsPage } from './pages/admin/AdminOrgStatisticsPage'
 import { MyOrgsPage } from './pages/org/MyOrgsPage'
 import { CreateOrgPage } from './pages/org/CreateOrgPage'
 import { EditOrgPage } from './pages/org/EditOrgPage'
@@ -56,6 +58,11 @@ export default function App() {
               element={<AdminUserDetailPage />}
             />
             <Route path="/admin/activity-log" element={<ActivityLogPage />} />
+            <Route path="/admin/statistics" element={<AdminStatisticsPage />} />
+            <Route
+              path="/admin/organizations/:orgId/statistics"
+              element={<AdminOrgStatisticsPage />}
+            />
           </Route>
         </Route>
 

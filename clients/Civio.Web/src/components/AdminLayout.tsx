@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
+  BarChart2,
   Building2,
   LayoutDashboard,
   LogOut,
@@ -56,6 +57,11 @@ export function AdminLayout() {
             <NavLink to="/admin/users" className={linkClass}>
               <Users size={16} />
               Пользователи
+            </NavLink>
+            <div className="sidebar-nav-section">Аналитика</div>
+            <NavLink to="/admin/statistics" className={linkClass}>
+              <BarChart2 size={16} />
+              Статистика
             </NavLink>
             <div className="sidebar-nav-section">Система</div>
             <NavLink to="/admin/activity-log" className={linkClass}>

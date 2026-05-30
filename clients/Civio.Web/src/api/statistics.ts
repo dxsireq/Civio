@@ -56,3 +56,56 @@ export async function getOrganizationStatistics(
   })
   return res.data
 }
+
+// --- Platform (admin) statistics ---
+
+export interface PlatformTotals {
+  totalUsers: number
+  totalOrganizations: number
+  activeOrganizations: number
+  totalBookings: number
+  totalRevenue: number
+  completedCount: number
+  cancelledCount: number
+  rejectedCount: number
+  newBookingsInRange: number
+  revenueInRange: number
+}
+
+export interface RevenueByOrganization {
+  organizationId: string
+  organizationName: string
+  revenue: number
+  bookingCount: number
+  completedCount: number
+}
+
+export interface PlatformStatistics {
+  from: string
+  to: string
+  totals: PlatformTotals
+  revenueByDay: RevenuePoint[]
+  revenueByOrganization: RevenueByOrganization[]
+  bookingsByStatus: BookingsByStatus[]
+}
+
+export async function getPlatformStatistics(
+  from: string,
+  to: string,
+): Promise<PlatformStatistics> {
+  const res = await api.get<PlatformStatistics>('/api/admin/statistics', {
+    params: { from, to },
+  })
+  return res.data
+}
+
+export async function getOrgStatisticsAsAdmin(
+  orgId: string,
+  from: string,
+  to: string,
+): Promise<OrgStatistics> {
+  const res = await api.get<OrgStatistics>(`/api/admin/organizations/${orgId}/statistics`, {
+    params: { from, to },
+  })
+  return res.data
+}

@@ -9,5 +9,6 @@ public interface IOrganizationStatisticsService
         Guid requestingUserId,
         DateTimeOffset from,
         DateTimeOffset to,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool bypassOwnerCheck = false);
 }
