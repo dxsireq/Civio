@@ -63,6 +63,7 @@ public sealed class AvailableSlotsService : IAvailableSlotsService
             .Where(s => employeeIds.Contains(s.EmployeeId) && s.StartAt >= dayStart && s.StartAt < dayEnd)
             .ToListAsync(cancellationToken);
 
+        var now = DateTimeOffset.UtcNow;
         var employeeMap = employees.ToDictionary(e => e.Id);
         var result = new List<AvailableSlotResponse>();
 
@@ -76,6 +77,9 @@ public sealed class AvailableSlotsService : IAvailableSlotsService
             foreach (var slot in freeSlots)
             {
                 var startAt = new DateTimeOffset(date.ToDateTime(slot.Start), TimeSpan.Zero);
+                if (startAt <= now)
+                    continue;
+
                 var endAt = new DateTimeOffset(date.ToDateTime(slot.End), TimeSpan.Zero);
 
                 result.Add(new AvailableSlotResponse(

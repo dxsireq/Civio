@@ -59,6 +59,10 @@ public sealed class BookingService : IBookingService
             throw new KeyNotFoundException($"Service {request.ServiceId} not found.");
 
         var startAtUtc = request.StartAt.ToUniversalTime();
+
+        if (startAtUtc <= DateTimeOffset.UtcNow)
+            throw new InvalidOperationException("Cannot book a slot in the past.");
+
         var date = DateOnly.FromDateTime(startAtUtc.DateTime);
 
         var workDay = await _dbContext.WorkDays
