@@ -663,7 +663,10 @@ function DaysTab({ empId }: { empId: string }) {
             <label className="field-label">Перерыв с</label>
             <input
               className="input"
-              type="time"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
               value={form.breakStart}
               onChange={(e) =>
                 setForm({ ...form, breakStart: e.target.value })
@@ -674,7 +677,10 @@ function DaysTab({ empId }: { empId: string }) {
             <label className="field-label">до</label>
             <input
               className="input"
-              type="time"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
               value={form.breakEnd}
               onChange={(e) =>
                 setForm({ ...form, breakEnd: e.target.value })
