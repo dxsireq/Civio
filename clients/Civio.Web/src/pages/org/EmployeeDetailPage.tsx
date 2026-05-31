@@ -462,10 +462,38 @@ function ServicesTab({ orgId, empId }: { orgId: string; empId: string }) {
   )
 }
 
+const WEEKDAYS = [
+  { iso: 1, label: 'Пн' },
+  { iso: 2, label: 'Вт' },
+  { iso: 3, label: 'Ср' },
+  { iso: 4, label: 'Чт' },
+  { iso: 5, label: 'Пт' },
+  { iso: 6, label: 'Сб' },
+  { iso: 7, label: 'Вс' },
+]
+
+function generateDates(selectedDays: number[], untilDate: string): string[] {
+  const result: string[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const until = new Date(untilDate)
+  until.setHours(0, 0, 0, 0)
+  const cur = new Date(today)
+  while (cur <= until) {
+    const iso = cur.getDay() === 0 ? 7 : cur.getDay()
+    if (selectedDays.includes(iso)) {
+      result.push(cur.toISOString().slice(0, 10))
+    }
+    cur.setDate(cur.getDate() + 1)
+  }
+  return result
+}
+
 function DaysTab({ empId }: { empId: string }) {
   const [days, setDays] = useState<WorkDay[] | null>(null)
   const [form, setForm] = useState({
-    workDate: '',
+    selectedDays: [] as number[],
+    untilDate: '',
     startTime: '10:00',
     endTime: '20:00',
     breakStart: '',
@@ -482,29 +510,63 @@ function DaysTab({ empId }: { empId: string }) {
     reload().catch((err) => toast.error(getErrorMessage(err)))
   }, [empId])
 
+  const toggleDay = (iso: number) => {
+    setForm((f) => ({
+      ...f,
+      selectedDays: f.selectedDays.includes(iso)
+        ? f.selectedDays.filter((d) => d !== iso)
+        : [...f.selectedDays, iso],
+    }))
+  }
+
   const onAdd = async () => {
-    if (!form.workDate || !form.startTime || !form.endTime) {
-      toast.error('Заполните дату, начало и конец')
+    if (form.selectedDays.length === 0) {
+      toast.error('Выберите хотя бы один день недели')
+      return
+    }
+    if (!form.untilDate) {
+      toast.error('Укажите дату окончания')
+      return
+    }
+    const until = new Date(form.untilDate)
+    until.setHours(0, 0, 0, 0)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (until < today) {
+      toast.error('Дата окончания должна быть не раньше сегодня')
+      return
+    }
+    if (!form.startTime || !form.endTime) {
+      toast.error('Заполните начало и конец рабочего дня')
+      return
+    }
+    const dates = generateDates(form.selectedDays, form.untilDate)
+    if (dates.length === 0) {
+      toast.error('Нет подходящих дат в указанном периоде')
       return
     }
     setBusy(true)
     try {
-      await createWorkDay(empId, {
-        workDate: form.workDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        breakStart: form.breakStart || undefined,
-        breakEnd: form.breakEnd || undefined,
-      })
-      setForm({
-        workDate: '',
-        startTime: '10:00',
-        endTime: '20:00',
-        breakStart: '',
-        breakEnd: '',
-      })
+      const results = await Promise.allSettled(
+        dates.map((d) =>
+          createWorkDay(empId, {
+            workDate: d,
+            startTime: form.startTime,
+            endTime: form.endTime,
+            breakStart: form.breakStart || undefined,
+            breakEnd: form.breakEnd || undefined,
+          }),
+        ),
+      )
+      const failed = results.filter((r) => r.status === 'rejected').length
+      const added = results.length - failed
       await reload()
-      toast.success('День добавлен')
+      if (failed === 0) {
+        toast.success(`Добавлено ${added} дн.`)
+      } else {
+        toast.success(`Добавлено ${added} дн., не удалось: ${failed}`)
+      }
+      setForm((f) => ({ ...f, selectedDays: [], untilDate: '' }))
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
@@ -616,27 +678,69 @@ function DaysTab({ empId }: { empId: string }) {
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
-          + Добавить рабочий день
+          + Добавить рабочие дни
         </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 8,
+            marginBottom: 10,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div className="field" style={{ margin: 0 }}>
+            <label className="field-label">Дни недели</label>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {WEEKDAYS.map(({ iso, label }) => (
+                <button
+                  key={iso}
+                  type="button"
+                  onClick={() => toggleDay(iso)}
+                  style={{
+                    width: 36,
+                    height: 34,
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 'var(--r-md)',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    background: form.selectedDays.includes(iso)
+                      ? 'var(--accent)'
+                      : 'var(--bg)',
+                    color: form.selectedDays.includes(iso)
+                      ? '#fff'
+                      : 'var(--text)',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field" style={{ margin: 0 }}>
+            <label className="field-label">До даты</label>
+            <input
+              className="input"
+              type="date"
+              value={form.untilDate}
+              onChange={(e) => setForm({ ...form, untilDate: e.target.value })}
+              style={{ width: 150 }}
+            />
+          </div>
+        </div>
+
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr) auto',
+            gridTemplateColumns: 'repeat(4, 1fr) auto',
             gap: 8,
             alignItems: 'end',
           }}
         >
-          <div className="field">
-            <label className="field-label">Дата</label>
-            <input
-              className="input"
-              type="date"
-              value={form.workDate}
-              onChange={(e) =>
-                setForm({ ...form, workDate: e.target.value })
-              }
-            />
-          </div>
           <div className="field">
             <label className="field-label">Начало</label>
             <input
