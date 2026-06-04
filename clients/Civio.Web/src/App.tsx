@@ -6,6 +6,7 @@ import { AuthLayout } from './components/AuthLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
+import { AcceptInvitePage } from './pages/invite/AcceptInvitePage'
 import { AdminOrgsPage } from './pages/admin/AdminOrgsPage'
 import { AdminOrgDetailPage } from './pages/admin/AdminOrgDetailPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
@@ -40,6 +41,7 @@ export default function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/invite/:token" element={<AcceptInvitePage />} />
         </Route>
 
         <Route element={<AdminRoute />}>

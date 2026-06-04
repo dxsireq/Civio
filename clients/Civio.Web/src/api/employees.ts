@@ -16,6 +16,8 @@ export interface EmployeeWithOrg {
   isActive: boolean
 }
 
+export type EmployeeMembershipStatus = 'pending' | 'active' | 'fired'
+
 export interface Employee {
   id: string
   organizationId: string
@@ -28,19 +30,27 @@ export interface Employee {
   email: string | null
   isActive: boolean
   createdAt: string
+  membershipStatus: EmployeeMembershipStatus
+  invitationStatus: string | null
 }
 
 export interface CreateEmployeeRequest {
+  firstName: string
+  lastName: string
+  email: string
+  middleName?: string
+  position?: string
+  phone?: string
+}
+
+export interface UpdateEmployeeRequest {
   firstName: string
   lastName: string
   middleName?: string
   position?: string
   phone?: string
   email?: string
-  userId?: string
 }
-
-export type UpdateEmployeeRequest = Omit<CreateEmployeeRequest, 'userId'>
 
 export async function getMyEmployeeRecords(): Promise<EmployeeWithOrg[]> {
   const res = await api.get<EmployeeWithOrg[]>('/api/employees/me')

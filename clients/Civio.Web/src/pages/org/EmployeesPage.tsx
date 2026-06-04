@@ -14,6 +14,12 @@ import {
 } from '../../api/employees'
 import { getErrorMessage } from '../../api/client'
 import { TopbarLeft } from '../../components/Topbar'
+import {
+  EMPLOYEE_STATUS_BADGE,
+  EMPLOYEE_STATUS_LABEL,
+} from '../../lib/employeeStatus'
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function EmployeesPage() {
   const { id: orgId } = useParams<{ id: string }>()
@@ -62,6 +68,10 @@ export function EmployeesPage() {
       setCreateError('Имя и фамилия обязательны')
       return
     }
+    if (!EMAIL_RE.test(form.email.trim())) {
+      setCreateError('Укажите корректный email сотрудника')
+      return
+    }
     setCreateError(null)
     setCreating(true)
     try {
@@ -69,10 +79,10 @@ export function EmployeesPage() {
       const created = await createEmployee(orgId, {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
+        email: form.email.trim(),
         middleName: empty(form.middleName),
         position: empty(form.position),
         phone: empty(form.phone),
-        email: empty(form.email),
       })
       setEmployees((prev) => (prev ? [...prev, created] : [created]))
       setForm({
@@ -84,7 +94,7 @@ export function EmployeesPage() {
         email: '',
       })
       setDrawerOpen(false)
-      toast.success('Сотрудник добавлен')
+      toast.success('Приглашение отправлено')
     } catch (err) {
       setCreateError(getErrorMessage(err))
     } finally {
@@ -207,17 +217,10 @@ export function EmployeesPage() {
                       </div>
                     </td>
                     <td>
-                      {e.isActive ? (
-                        <span className="badge badge-approved">
-                          <span className="badge-dot" />
-                          Активен
-                        </span>
-                      ) : (
-                        <span className="badge badge-neutral">
-                          <span className="badge-dot" />
-                          Неактивен
-                        </span>
-                      )}
+                      <span className={EMPLOYEE_STATUS_BADGE[e.membershipStatus]}>
+                        <span className="badge-dot" />
+                        {EMPLOYEE_STATUS_LABEL[e.membershipStatus]}
+                      </span>
                     </td>
                     <td className="cell-actions">
                       <button
@@ -337,7 +340,9 @@ export function EmployeesPage() {
                 />
               </div>
               <div className="field">
-                <label className="field-label">Email</label>
+                <label className="field-label">
+                  Email <span className="req">*</span> — на него придёт приглашение
+                </label>
                 <input
                   className="input"
                   type="email"

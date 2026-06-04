@@ -22,6 +22,7 @@ public sealed class Employee
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
 
+    public ICollection<EmployeeInvitation> Invitations { get; set; } = [];
     public ICollection<EmployeeService> EmployeeServices { get; set; } = [];
     public ICollection<ScheduleTemplate> ScheduleTemplates { get; set; } = [];
     public ICollection<WorkDay> WorkDays { get; set; } = [];

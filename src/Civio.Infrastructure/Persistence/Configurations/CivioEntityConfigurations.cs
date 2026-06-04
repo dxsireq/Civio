@@ -194,6 +194,40 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
     }
 }
 
+public sealed class EmployeeInvitationConfiguration : IEntityTypeConfiguration<EmployeeInvitation>
+{
+    public void Configure(EntityTypeBuilder<EmployeeInvitation> builder)
+    {
+        builder.ToTable("employee_invitations");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
+        builder.Property(x => x.EmployeeId).HasColumnName("employee_id");
+        builder.Property(x => x.OrganizationId).HasColumnName("organization_id");
+        builder.Property(x => x.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
+        builder.Property(x => x.Token).HasColumnName("token").IsRequired();
+        builder.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
+        builder.Property(x => x.InvitedBy).HasColumnName("invited_by");
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();
+        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at").IsRequired();
+        builder.Property(x => x.AcceptedAt).HasColumnName("accepted_at");
+
+        builder.HasOne(x => x.Employee)
+            .WithMany(x => x.Invitations)
+            .HasForeignKey(x => x.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(x => x.Organization)
+            .WithMany()
+            .HasForeignKey(x => x.OrganizationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.Token).IsUnique();
+        builder.HasIndex(x => x.EmployeeId);
+    }
+}
+
 public sealed class ServiceCategoryConfiguration : IEntityTypeConfiguration<ServiceCategory>
 {
     public void Configure(EntityTypeBuilder<ServiceCategory> builder)

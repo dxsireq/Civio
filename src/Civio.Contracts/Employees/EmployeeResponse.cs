@@ -11,5 +11,9 @@ public sealed record EmployeeResponse(
     string? Phone,
     string? Email,
     bool IsActive,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    /// <summary>pending | active | fired</summary>
+    string MembershipStatus,
+    /// <summary>pending | accepted | expired | revoked. Null when membership is active or fired.</summary>
+    string? InvitationStatus
 );

@@ -204,6 +204,7 @@ authGroup.MapPost("/me/change-password", async (
 
 app.MapOrganizationEndpoints();
 app.MapEmployeeEndpoints();
+app.MapInvitationEndpoints();
 app.MapServiceEndpoints();
 app.MapWorkDayEndpoints();
 app.MapScheduleTemplateEndpoints();

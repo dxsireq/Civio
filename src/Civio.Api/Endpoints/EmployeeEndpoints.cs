@@ -26,6 +26,8 @@ public static class EmployeeEndpoints
         group.MapGet("/{id:guid}/services", GetEmployeeServicesAsync);
         group.MapPost("/{id:guid}/services/{serviceId:guid}", AssignServiceAsync);
         group.MapDelete("/{id:guid}/services/{serviceId:guid}", UnassignServiceAsync);
+        group.MapPost("/{id:guid}/invitation/resend", ResendInvitationAsync);
+        group.MapPost("/{id:guid}/invitation/revoke", RevokeInvitationAsync);
 
         return app;
     }
@@ -158,6 +160,34 @@ public static class EmployeeEndpoints
             return Results.Unauthorized();
 
         await employeeService.UnassignServiceAsync(id, orgId, serviceId, userId, cancellationToken);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> ResendInvitationAsync(
+        Guid orgId,
+        Guid id,
+        ClaimsPrincipal user,
+        IEmployeeInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        await invitationService.ResendAsync(orgId, id, userId, cancellationToken);
+        return Results.NoContent();
+    }
+
+    private static async Task<IResult> RevokeInvitationAsync(
+        Guid orgId,
+        Guid id,
+        ClaimsPrincipal user,
+        IEmployeeInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(user, out var userId))
+            return Results.Unauthorized();
+
+        await invitationService.RevokeAsync(orgId, id, userId, cancellationToken);
         return Results.NoContent();
     }
 

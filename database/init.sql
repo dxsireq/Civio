@@ -85,6 +85,21 @@ CREATE TABLE employees (
     updated_at      TIMESTAMPTZ
 );
 
+CREATE TABLE employee_invitations (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    employee_id     UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    email           VARCHAR(255) NOT NULL,
+    token           TEXT NOT NULL UNIQUE,
+    status          VARCHAR(20) NOT NULL DEFAULT 'pending',
+    invited_by      UUID REFERENCES users(id),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at      TIMESTAMPTZ NOT NULL,
+    accepted_at     TIMESTAMPTZ
+);
+CREATE INDEX idx_employee_invitations_token ON employee_invitations(token);
+CREATE INDEX idx_employee_invitations_employee_id ON employee_invitations(employee_id);
+
 CREATE TABLE service_categories (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,

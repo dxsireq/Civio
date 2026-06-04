@@ -43,8 +43,11 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<INotificationService, NotificationService>();
 
+        services.Configure<AppOptions>(configuration.GetSection("App"));
+
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IEmployeeInvitationService, EmployeeInvitationService>();
         services.AddScoped<IServiceService, ServiceService>();
         services.AddScoped<IWorkDayService, WorkDayService>();
         services.AddScoped<IScheduleTemplateService, ScheduleTemplateService>();

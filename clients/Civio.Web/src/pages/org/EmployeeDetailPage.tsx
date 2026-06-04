@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Trash2, X as XIcon } from 'lucide-react'
+import { ArrowLeft, Mail, RefreshCw, Trash2, X as XIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   assignServiceToEmployee,
@@ -11,6 +11,7 @@ import {
   updateEmployee,
   type Employee,
 } from '../../api/employees'
+import { resendInvitation, revokeInvitation } from '../../api/invitations'
 import {
   getServices,
   type Service,
@@ -134,48 +135,182 @@ export function EmployeeDetailPage() {
           )}
         </div>
 
-        <div className="card" style={{ padding: 0 }}>
-          <div style={{ padding: '0 20px' }}>
-            <div className="tabs">
-              <button
-                type="button"
-                className={'tab' + (tab === 'data' ? ' active' : '')}
-                onClick={() => setTab('data')}
-              >
-                Данные
-              </button>
-              <button
-                type="button"
-                className={'tab' + (tab === 'services' ? ' active' : '')}
-                onClick={() => setTab('services')}
-              >
-                Услуги
-              </button>
-              <button
-                type="button"
-                className={'tab' + (tab === 'days' ? ' active' : '')}
-                onClick={() => setTab('days')}
-              >
-                Рабочие дни
-              </button>
+        {employee.membershipStatus === 'pending' ? (
+          <InvitationPanel
+            employee={employee}
+            orgId={orgId}
+            empId={empId}
+            onSaved={setEmployee}
+            onRevoked={() => navigate(`/organizations/${orgId}/employees`)}
+          />
+        ) : (
+          <div className="card" style={{ padding: 0 }}>
+            <div style={{ padding: '0 20px' }}>
+              <div className="tabs">
+                <button
+                  type="button"
+                  className={'tab' + (tab === 'data' ? ' active' : '')}
+                  onClick={() => setTab('data')}
+                >
+                  Данные
+                </button>
+                <button
+                  type="button"
+                  className={'tab' + (tab === 'services' ? ' active' : '')}
+                  onClick={() => setTab('services')}
+                >
+                  Услуги
+                </button>
+                <button
+                  type="button"
+                  className={'tab' + (tab === 'days' ? ' active' : '')}
+                  onClick={() => setTab('days')}
+                >
+                  Рабочие дни
+                </button>
+              </div>
             </div>
-          </div>
 
-          {tab === 'data' && (
-            <DataTab
-              employee={employee}
-              orgId={orgId}
-              empId={empId}
-              onSaved={setEmployee}
-            />
-          )}
-          {tab === 'services' && (
-            <ServicesTab orgId={orgId} empId={empId} />
-          )}
-          {tab === 'days' && <DaysTab empId={empId} />}
-        </div>
+            {tab === 'data' && (
+              <DataTab
+                employee={employee}
+                orgId={orgId}
+                empId={empId}
+                onSaved={setEmployee}
+              />
+            )}
+            {tab === 'services' && (
+              <ServicesTab orgId={orgId} empId={empId} />
+            )}
+            {tab === 'days' && <DaysTab empId={empId} />}
+          </div>
+        )}
       </div>
     </>
+  )
+}
+
+function InvitationPanel({
+  employee,
+  orgId,
+  empId,
+  onSaved,
+  onRevoked,
+}: {
+  employee: Employee
+  orgId: string
+  empId: string
+  onSaved: (e: Employee) => void
+  onRevoked: () => void
+}) {
+  const [busy, setBusy] = useState(false)
+
+  const onResend = async () => {
+    setBusy(true)
+    try {
+      await resendInvitation(orgId, empId)
+      toast.success('Приглашение отправлено повторно')
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onRevoke = async () => {
+    if (!confirm('Отозвать приглашение? Сотрудник будет удалён из списка.')) return
+    setBusy(true)
+    try {
+      await revokeInvitation(orgId, empId)
+      toast.success('Приглашение отозвано')
+      onRevoked()
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: 24 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <span
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 40,
+            height: 40,
+            borderRadius: 'var(--r-md)',
+            background: 'var(--bg-soft)',
+            color: 'var(--text-soft)',
+            flexShrink: 0,
+          }}
+        >
+          <Mail size={18} />
+        </span>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 600 }}>Приглашение отправлено</span>
+            <span className="badge badge-pending">
+              <span className="badge-dot" />
+              Ожидает принятия
+            </span>
+          </div>
+          <div
+            style={{ fontSize: 13, color: 'var(--text-soft)', marginTop: 4 }}
+          >
+            Письмо отправлено на <b>{employee.email}</b>. Сотрудник получит доступ
+            после регистрации и принятия приглашения.
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={onResend}
+          disabled={busy}
+        >
+          <RefreshCw size={13} />
+          Переслать приглашение
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          style={{ color: 'var(--red-600)' }}
+          onClick={onRevoke}
+          disabled={busy}
+        >
+          <Trash2 size={13} />
+          Отозвать
+        </button>
+      </div>
+
+      <div
+        style={{
+          borderTop: '1px solid var(--border)',
+          paddingTop: 20,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
+          Данные сотрудника (предзаполнят форму регистрации)
+        </div>
+        <DataTab
+          employee={employee}
+          orgId={orgId}
+          empId={empId}
+          onSaved={onSaved}
+        />
+      </div>
+    </div>
   )
 }
 

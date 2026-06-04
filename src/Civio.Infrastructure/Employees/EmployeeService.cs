@@ -1,20 +1,30 @@
+using System.Security.Cryptography;
 using Civio.Application.Employees;
+using Civio.Application.Notifications;
 using Civio.Contracts.Employees;
 using Civio.Contracts.Services;
 using Civio.Domain.Authorization;
 using Civio.Domain.Entities;
 using Civio.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Civio.Infrastructure.Employees;
 
 public sealed class EmployeeService : IEmployeeService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IEmailSender _emailSender;
+    private readonly AppOptions _appOptions;
 
-    public EmployeeService(AppDbContext dbContext)
+    public EmployeeService(
+        AppDbContext dbContext,
+        IEmailSender emailSender,
+        IOptions<AppOptions> appOptions)
     {
         _dbContext = dbContext;
+        _emailSender = emailSender;
+        _appOptions = appOptions.Value;
     }
 
     public async Task<EmployeeResponse> CreateAsync(
@@ -35,6 +45,7 @@ public sealed class EmployeeService : IEmployeeService
 
         var firstName = request.FirstName.Trim();
         var lastName = request.LastName.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
 
         if (string.IsNullOrWhiteSpace(firstName))
             throw new ArgumentException("First name is required.");
@@ -42,25 +53,68 @@ public sealed class EmployeeService : IEmployeeService
         if (string.IsNullOrWhiteSpace(lastName))
             throw new ArgumentException("Last name is required.");
 
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email is required.");
+
+        // Prevent duplicate: active or pending employee with same email in this org
+        var duplicate = await _dbContext.Employees
+            .AsNoTracking()
+            .AnyAsync(e => e.OrganizationId == organizationId
+                && e.Email == email
+                && (e.UserId != null || _dbContext.EmployeeInvitations
+                    .Any(i => i.EmployeeId == e.Id && i.Status == "pending")),
+                cancellationToken);
+
+        if (duplicate)
+            throw new InvalidOperationException("An employee with this email already exists in the organization.");
+
         var employee = new Employee
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,
-            UserId = request.UserId,
+            UserId = null,
             FirstName = firstName,
             LastName = lastName,
             MiddleName = NormalizeNullable(request.MiddleName),
             Position = NormalizeNullable(request.Position),
             Phone = NormalizeNullable(request.Phone),
-            Email = NormalizeNullable(request.Email),
-            IsActive = true,
+            Email = email,
+            IsActive = false,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
+        var token = GenerateToken();
+        var invitation = new EmployeeInvitation
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = employee.Id,
+            OrganizationId = organizationId,
+            Email = email,
+            Token = token,
+            Status = "pending",
+            InvitedBy = requestingUserId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
         _dbContext.Employees.Add(employee);
+        _dbContext.EmployeeInvitations.Add(invitation);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(employee);
+        // Send invitation email (no-op in dev if SMTP not configured)
+        var userExists = await _dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Email == email, cancellationToken);
+
+        var inviteLink = $"{_appOptions.WebClientBaseUrl.TrimEnd('/')}/invite/{token}";
+        var subject = $"Приглашение в организацию «{organization.Name}»";
+        var body = userExists
+            ? $"Вас приглашают присоединиться к организации «{organization.Name}».\n\nВойдите в систему и примите приглашение по ссылке:\n{inviteLink}"
+            : $"Вас приглашают присоединиться к организации «{organization.Name}».\n\nЗарегистрируйтесь и начните работу по ссылке:\n{inviteLink}";
+
+        await _emailSender.SendAsync(email, subject, body, cancellationToken);
+
+        return ToResponse(employee, invitation.Status);
     }
 
     public async Task<IReadOnlyList<EmployeeResponse>> GetByOrganizationAsync(
@@ -71,6 +125,7 @@ public sealed class EmployeeService : IEmployeeService
         var organization = await _dbContext.Organizations
             .AsNoTracking()
             .Include(o => o.Employees)
+            .ThenInclude(e => e.Invitations)
             .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
 
         if (organization is null)
@@ -82,11 +137,15 @@ public sealed class EmployeeService : IEmployeeService
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
-        return organization.Employees
-            .Where(e => e.IsActive)
+        // Owner sees all (active, pending, fired); employees see only active
+        var employees = OrganizationAccess.IsOwner(requestingUserId, organization)
+            ? organization.Employees
+            : organization.Employees.Where(e => e.IsActive);
+
+        return employees
             .OrderBy(e => e.LastName)
             .ThenBy(e => e.FirstName)
-            .Select(ToResponse)
+            .Select(e => ToResponse(e, LatestInvitationStatus(e)))
             .ToList();
     }
 
@@ -99,6 +158,7 @@ public sealed class EmployeeService : IEmployeeService
         var organization = await _dbContext.Organizations
             .AsNoTracking()
             .Include(o => o.Employees)
+            .ThenInclude(e => e.Invitations)
             .FirstOrDefaultAsync(o => o.Id == organizationId, cancellationToken);
 
         if (organization is null)
@@ -110,12 +170,12 @@ public sealed class EmployeeService : IEmployeeService
         if (!hasAccess)
             throw new UnauthorizedAccessException("Access denied.");
 
-        var employee = organization.Employees.FirstOrDefault(e => e.Id == id && e.IsActive);
+        var employee = organization.Employees.FirstOrDefault(e => e.Id == id);
 
         if (employee is null)
             throw new KeyNotFoundException($"Employee {id} not found.");
 
-        return ToResponse(employee);
+        return ToResponse(employee, LatestInvitationStatus(employee));
     }
 
     public async Task<EmployeeResponse> UpdateAsync(
@@ -136,6 +196,7 @@ public sealed class EmployeeService : IEmployeeService
             throw new UnauthorizedAccessException("Only the owner can update employees.");
 
         var employee = await _dbContext.Employees
+            .Include(e => e.Invitations)
             .FirstOrDefaultAsync(e => e.Id == id && e.OrganizationId == organizationId, cancellationToken);
 
         if (employee is null)
@@ -160,7 +221,7 @@ public sealed class EmployeeService : IEmployeeService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(employee);
+        return ToResponse(employee, LatestInvitationStatus(employee));
     }
 
     public async Task DeactivateAsync(
@@ -187,7 +248,6 @@ public sealed class EmployeeService : IEmployeeService
 
         employee.IsActive = false;
         employee.UpdatedAt = DateTimeOffset.UtcNow;
-        _dbContext.Entry(employee).Property(e => e.IsActive).IsModified = true;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
@@ -330,8 +390,13 @@ public sealed class EmployeeService : IEmployeeService
             .ToListAsync(cancellationToken);
     }
 
-    private static EmployeeResponse ToResponse(Employee e) =>
-        new(
+    private static EmployeeResponse ToResponse(Employee e, string? invitationStatus)
+    {
+        var membershipStatus = e.UserId.HasValue
+            ? (e.IsActive ? "active" : "fired")
+            : "pending";
+
+        return new EmployeeResponse(
             e.Id,
             e.OrganizationId,
             e.UserId,
@@ -342,7 +407,26 @@ public sealed class EmployeeService : IEmployeeService
             e.Phone,
             e.Email,
             e.IsActive,
-            e.CreatedAt.UtcDateTime);
+            e.CreatedAt.UtcDateTime,
+            membershipStatus,
+            e.UserId.HasValue ? null : invitationStatus);
+    }
+
+    private static string? LatestInvitationStatus(Employee e) =>
+        e.Invitations
+            .OrderByDescending(i => i.CreatedAt)
+            .FirstOrDefault()
+            ?.Status;
+
+    internal static string GenerateToken()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+    }
 
     private static string? NormalizeNullable(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();

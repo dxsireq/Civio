@@ -18,6 +18,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<OrganizationModerationHistory> OrganizationModerationHistory => Set<OrganizationModerationHistory>();
 
     public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<EmployeeInvitation> EmployeeInvitations => Set<EmployeeInvitation>();
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<EmployeeService> EmployeeServices => Set<EmployeeService>();
