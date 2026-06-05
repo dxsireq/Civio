@@ -12,6 +12,7 @@ public sealed class User
     public string? MiddleName { get; set; }
 
     public bool IsActive { get; set; }
+    public bool IsEmailVerified { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
 

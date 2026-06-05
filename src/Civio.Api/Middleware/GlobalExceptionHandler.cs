@@ -1,3 +1,4 @@
+using Civio.Application.Auth;
 using Civio.Contracts.Common;
 using Microsoft.AspNetCore.Diagnostics;
 
@@ -10,19 +11,20 @@ public class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var statusCode = exception switch
+        var (statusCode, code) = exception switch
         {
-            ArgumentException => StatusCodes.Status400BadRequest,
-            UnauthorizedAccessException => StatusCodes.Status403Forbidden,
-            KeyNotFoundException => StatusCodes.Status404NotFound,
-            InvalidOperationException => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status500InternalServerError
+            EmailNotVerifiedException => (StatusCodes.Status403Forbidden, "email_not_verified"),
+            ArgumentException => (StatusCodes.Status400BadRequest, (string?)null),
+            UnauthorizedAccessException => (StatusCodes.Status403Forbidden, null),
+            KeyNotFoundException => (StatusCodes.Status404NotFound, null),
+            InvalidOperationException => (StatusCodes.Status409Conflict, null),
+            _ => (StatusCodes.Status500InternalServerError, null)
         };
 
         httpContext.Response.StatusCode = statusCode;
 
         await httpContext.Response.WriteAsJsonAsync(
-            new ErrorResponse(exception.Message, statusCode),
+            new ErrorResponse(exception.Message, statusCode, code),
             cancellationToken);
 
         return true;

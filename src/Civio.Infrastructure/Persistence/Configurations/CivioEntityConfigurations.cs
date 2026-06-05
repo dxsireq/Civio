@@ -36,6 +36,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.LastName).HasColumnName("last_name").HasMaxLength(100).IsRequired();
         builder.Property(x => x.MiddleName).HasColumnName("middle_name").HasMaxLength(100);
         builder.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true).IsRequired();
+        builder.Property(x => x.IsEmailVerified).HasColumnName("is_email_verified").HasDefaultValue(false).IsRequired();
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
 
@@ -677,6 +678,31 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
 
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.BookingId);
+    }
+}
+
+public sealed class EmailVerificationCodeConfiguration : IEntityTypeConfiguration<EmailVerificationCode>
+{
+    public void Configure(EntityTypeBuilder<EmailVerificationCode> builder)
+    {
+        builder.ToTable("email_verification_codes");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id).HasColumnName("id").HasDefaultValueSql("uuid_generate_v4()");
+        builder.Property(x => x.UserId).HasColumnName("user_id");
+        builder.Property(x => x.CodeHash).HasColumnName("code_hash").IsRequired();
+        builder.Property(x => x.ExpiresAt).HasColumnName("expires_at").IsRequired();
+        builder.Property(x => x.ConsumedAt).HasColumnName("consumed_at");
+        builder.Property(x => x.Attempts).HasColumnName("attempts").HasDefaultValue(0).IsRequired();
+        builder.Property(x => x.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()").IsRequired();
+
+        builder.HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.UserId);
     }
 }
 

@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { AlertCircle, Eye, EyeOff } from 'lucide-react'
-import { login, me } from '../../api/auth'
+import { login, me, resendCode } from '../../api/auth'
 import { useAuthStore } from '../../store/auth'
-import { getErrorMessage } from '../../api/client'
+import { getErrorCode, getErrorMessage } from '../../api/client'
 
 const schema = z.object({
   email: z.string().min(1, 'Введите email').email('Некорректный email'),
@@ -51,6 +51,12 @@ export function LoginPage() {
       navigate(from?.pathname ?? fallback, { replace: true })
     } catch (err) {
       localStorage.removeItem('token')
+      if (getErrorCode(err) === 'email_not_verified') {
+        // Silently kick off a resend, then redirect to verify screen
+        try { await resendCode({ email: data.email.trim().toLowerCase() }) } catch { /* ignore */ }
+        navigate('/register/verify', { state: { email: data.email.trim().toLowerCase() } })
+        return
+      }
       setSubmitError(getErrorMessage(err))
     }
   }

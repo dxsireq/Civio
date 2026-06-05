@@ -29,6 +29,7 @@ import com.example.civiomobile.ui.screens.BookingsScreen
 import com.example.civiomobile.ui.screens.ConfirmBookingScreen
 import com.example.civiomobile.ui.screens.LoginScreen
 import com.example.civiomobile.ui.screens.NotificationsScreen
+import com.example.civiomobile.ui.screens.VerifyEmailScreen
 import com.example.civiomobile.ui.screens.OrganizationDetailScreen
 import com.example.civiomobile.ui.screens.OrganizationsScreen
 import com.example.civiomobile.ui.screens.ProfileScreen
@@ -79,7 +80,10 @@ private fun NavGraphBuilder.authGraph(navController: NavHostController) {
                         popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                     }
                 },
-                onNavigateRegister = { navController.navigate(Routes.REGISTER) }
+                onNavigateRegister = { navController.navigate(Routes.REGISTER) },
+                onNavigateVerify = { email ->
+                    navController.navigate(Routes.verifyEmail(email))
+                }
             )
         }
         composable(Routes.REGISTER) {
@@ -89,7 +93,25 @@ private fun NavGraphBuilder.authGraph(navController: NavHostController) {
                         popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
                     }
                 },
-                onNavigateLogin = { navController.popBackStack() }
+                onNavigateLogin = { navController.popBackStack() },
+                onNavigateVerify = { email ->
+                    navController.navigate(Routes.verifyEmail(email))
+                }
+            )
+        }
+        composable(
+            route = Routes.VERIFY_EMAIL,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            VerifyEmailScreen(
+                email = email,
+                onVerified = {
+                    navController.navigate(Routes.MAIN_GRAPH) {
+                        popUpTo(Routes.AUTH_GRAPH) { inclusive = true }
+                    }
+                },
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

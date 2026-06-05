@@ -48,9 +48,31 @@ export async function login(data: LoginRequest): Promise<AuthResponse> {
   return res.data
 }
 
-export async function register(data: RegisterRequest): Promise<AuthResponse> {
-  const res = await api.post<AuthResponse>('/api/auth/register', data)
+export interface RegisterResponse {
+  email: string
+}
+
+export interface VerifyEmailRequest {
+  email: string
+  code: string
+}
+
+export interface ResendCodeRequest {
+  email: string
+}
+
+export async function register(data: RegisterRequest): Promise<RegisterResponse> {
+  const res = await api.post<RegisterResponse>('/api/auth/register', data)
   return res.data
+}
+
+export async function verifyEmail(data: VerifyEmailRequest): Promise<AuthResponse> {
+  const res = await api.post<AuthResponse>('/api/auth/verify-email', data)
+  return res.data
+}
+
+export async function resendCode(data: ResendCodeRequest): Promise<void> {
+  await api.post('/api/auth/resend-code', data)
 }
 
 export async function me(): Promise<CurrentUserResponse> {

@@ -146,6 +146,24 @@ authGroup.MapPost("/register", async (
     return Results.Ok(response);
 });
 
+authGroup.MapPost("/verify-email", async (
+    VerifyEmailRequest request,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    var response = await authService.VerifyEmailAsync(request, cancellationToken);
+    return Results.Ok(response);
+});
+
+authGroup.MapPost("/resend-code", async (
+    ResendCodeRequest request,
+    IAuthService authService,
+    CancellationToken cancellationToken) =>
+{
+    await authService.ResendCodeAsync(request, cancellationToken);
+    return Results.Ok();
+});
+
 authGroup.MapPost("/login", async (
     LoginRequest request,
     IAuthService authService,

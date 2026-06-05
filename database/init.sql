@@ -18,10 +18,23 @@ CREATE TABLE users (
     first_name      VARCHAR(100) NOT NULL,
     last_name       VARCHAR(100) NOT NULL,
     middle_name     VARCHAR(100),
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ
+    is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+    is_email_verified   BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ
 );
+
+CREATE TABLE email_verification_codes (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code_hash   TEXT NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    consumed_at TIMESTAMPTZ,
+    attempts    INT NOT NULL DEFAULT 0,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ix_evc_user ON email_verification_codes(user_id);
 
 CREATE TABLE user_roles (
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -384,19 +397,19 @@ INSERT INTO notification_statuses (code, name) VALUES
 -- -------------------------------------------------------------
 -- Users
 -- -------------------------------------------------------------
-INSERT INTO users (id, email, password_hash, first_name, last_name, is_active, created_at)
+INSERT INTO users (id, email, password_hash, first_name, last_name, is_active, is_email_verified, created_at)
 VALUES
     ('a0000000-0000-0000-0000-000000000001', 'owner@civio.test',
      'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
-     'Иван', 'Петров', true, NOW()),
+     'Иван', 'Петров', true, true, NOW()),
 
     ('a0000000-0000-0000-0000-000000000002', 'employee@civio.test',
      'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
-     'Мария', 'Иванова', true, NOW()),
+     'Мария', 'Иванова', true, true, NOW()),
 
     ('a0000000-0000-0000-0000-000000000003', 'client@civio.test',
      'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
-     'Алексей', 'Сидоров', true, NOW())
+     'Алексей', 'Сидоров', true, true, NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- -------------------------------------------------------------
@@ -501,15 +514,15 @@ DO $seed_users$
 DECLARE
     pw TEXT := 'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==';
 BEGIN
-    INSERT INTO users (id, email, password_hash, first_name, last_name, phone, is_active, created_at) VALUES
-        ('a0000000-0000-0000-0000-000000000004', 'admin@civio.test',     pw, 'Админ',   'Платформы',  '+7 900 000-00-04', true, NOW()),
-        ('a0000000-0000-0000-0000-000000000005', 'owner2@civio.test',    pw, 'Сергей',  'Кузнецов',   '+7 900 000-00-05', true, NOW()),
-        ('a0000000-0000-0000-0000-000000000006', 'owner3@civio.test',    pw, 'Андрей',  'Смирнов',    '+7 900 000-00-06', true, NOW()),
-        ('a0000000-0000-0000-0000-000000000007', 'owner4@civio.test',    pw, 'Виктор',  'Морозов',    '+7 900 000-00-07', true, NOW()),
-        ('a0000000-0000-0000-0000-000000000008', 'employee2@civio.test', pw, 'Ольга',   'Соколова',   '+7 900 000-00-08', true, NOW()),
-        ('a0000000-0000-0000-0000-000000000009', 'employee3@civio.test', pw, 'Елена',   'Васильева',  '+7 900 000-00-09', true, NOW()),
-        ('a0000000-0000-0000-0000-00000000000a', 'client2@civio.test',   pw, 'Дмитрий', 'Новиков',    '+7 900 000-00-0a', true, NOW()),
-        ('a0000000-0000-0000-0000-00000000000b', 'client3@civio.test',   pw, 'Анна',    'Фёдорова',   '+7 900 000-00-0b', true, NOW())
+    INSERT INTO users (id, email, password_hash, first_name, last_name, phone, is_active, is_email_verified, created_at) VALUES
+        ('a0000000-0000-0000-0000-000000000004', 'admin@civio.test',     pw, 'Админ',   'Платформы',  '+7 900 000-00-04', true, true, NOW()),
+        ('a0000000-0000-0000-0000-000000000005', 'owner2@civio.test',    pw, 'Сергей',  'Кузнецов',   '+7 900 000-00-05', true, true, NOW()),
+        ('a0000000-0000-0000-0000-000000000006', 'owner3@civio.test',    pw, 'Андрей',  'Смирнов',    '+7 900 000-00-06', true, true, NOW()),
+        ('a0000000-0000-0000-0000-000000000007', 'owner4@civio.test',    pw, 'Виктор',  'Морозов',    '+7 900 000-00-07', true, true, NOW()),
+        ('a0000000-0000-0000-0000-000000000008', 'employee2@civio.test', pw, 'Ольга',   'Соколова',   '+7 900 000-00-08', true, true, NOW()),
+        ('a0000000-0000-0000-0000-000000000009', 'employee3@civio.test', pw, 'Елена',   'Васильева',  '+7 900 000-00-09', true, true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000a', 'client2@civio.test',   pw, 'Дмитрий', 'Новиков',    '+7 900 000-00-0a', true, true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000b', 'client3@civio.test',   pw, 'Анна',    'Фёдорова',   '+7 900 000-00-0b', true, true, NOW())
     ON CONFLICT (email) DO NOTHING;
 END
 $seed_users$;

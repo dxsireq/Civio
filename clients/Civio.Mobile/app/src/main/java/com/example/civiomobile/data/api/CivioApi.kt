@@ -1,6 +1,9 @@
 package com.example.civiomobile.data.api
 
 import com.example.civiomobile.data.api.dto.AuthResponse
+import com.example.civiomobile.data.api.dto.RegisterResponse
+import com.example.civiomobile.data.api.dto.ResendCodeRequest
+import com.example.civiomobile.data.api.dto.VerifyEmailRequest
 import com.example.civiomobile.data.api.dto.AvailableSlotResponse
 import com.example.civiomobile.data.api.dto.BookingQrResponse
 import com.example.civiomobile.data.api.dto.BookingResponse
@@ -11,6 +14,7 @@ import com.example.civiomobile.data.api.dto.LoginRequest
 import com.example.civiomobile.data.api.dto.NotificationResponse
 import com.example.civiomobile.data.api.dto.OrganizationResponse
 import com.example.civiomobile.data.api.dto.RegisterRequest
+
 import com.example.civiomobile.data.api.dto.ServiceResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -24,7 +28,13 @@ interface CivioApi {
     suspend fun login(@Body body: LoginRequest): AuthResponse
 
     @POST("api/auth/register")
-    suspend fun register(@Body body: RegisterRequest): AuthResponse
+    suspend fun register(@Body body: RegisterRequest): RegisterResponse
+
+    @POST("api/auth/verify-email")
+    suspend fun verifyEmail(@Body body: VerifyEmailRequest): AuthResponse
+
+    @POST("api/auth/resend-code")
+    suspend fun resendCode(@Body body: ResendCodeRequest)
 
     @GET("api/auth/me")
     suspend fun getMe(): CurrentUserResponse

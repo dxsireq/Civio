@@ -4,8 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
-import { me, register as apiRegister } from "../../api/auth";
-import { useAuthStore } from "../../store/auth";
+import { register as apiRegister } from "../../api/auth";
 import { getErrorMessage } from "../../api/client";
 
 const schema = z
@@ -43,7 +42,6 @@ type FormData = z.infer<typeof schema>;
 
 export function RegisterPage() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -98,29 +96,16 @@ export function RegisterPage() {
   const onSubmit = async (data: FormData) => {
     setSubmitError(null);
     try {
-      const auth = await apiRegister({
+      await apiRegister({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
         phone: data.phone?.trim() ? data.phone.trim() : undefined,
       });
-      localStorage.setItem("token", auth.accessToken);
 
-      const current = await me();
-      setAuth(auth.accessToken, {
-        id: current.userId,
-        email: current.email,
-        firstName: current.firstName,
-        lastName: current.lastName,
-        middleName: current.middleName,
-        phone: current.phone,
-        roles: current.roles,
-      });
-
-      navigate("/", { replace: true });
+      navigate("/register/verify", { state: { email: data.email.trim().toLowerCase() } });
     } catch (err) {
-      localStorage.removeItem("token");
       setSubmitError(getErrorMessage(err));
     }
   };

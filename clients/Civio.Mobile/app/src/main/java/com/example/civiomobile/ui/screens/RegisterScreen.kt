@@ -38,6 +38,7 @@ import com.example.civiomobile.viewmodel.AuthViewModel
 fun RegisterScreen(
     onLoggedIn: () -> Unit,
     onNavigateLogin: () -> Unit,
+    onNavigateVerify: (email: String) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -51,7 +52,11 @@ fun RegisterScreen(
     val errorMessage = (state as? AuthState.Error)?.message
 
     LaunchedEffect(state) {
-        if (state is AuthState.Authenticated) onLoggedIn()
+        when (val s = state) {
+            is AuthState.Authenticated -> onLoggedIn()
+            is AuthState.PendingVerification -> onNavigateVerify(s.email)
+            else -> Unit
+        }
     }
 
     Scaffold(

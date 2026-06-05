@@ -38,6 +38,7 @@ public sealed class AppDbContext : DbContext
     public DbSet<NotificationStatus> NotificationStatuses => Set<NotificationStatus>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<DevicePushToken> DevicePushTokens => Set<DevicePushToken>();
+    public DbSet<EmailVerificationCode> EmailVerificationCodes => Set<EmailVerificationCode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

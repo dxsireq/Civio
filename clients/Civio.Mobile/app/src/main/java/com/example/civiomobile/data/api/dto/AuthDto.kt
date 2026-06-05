@@ -14,6 +14,19 @@ data class RegisterRequest(
     val phone: String? = null
 )
 
+data class RegisterResponse(
+    val email: String
+)
+
+data class VerifyEmailRequest(
+    val email: String,
+    val code: String
+)
+
+data class ResendCodeRequest(
+    val email: String
+)
+
 data class AuthResponse(
     val userId: String,
     val email: String,

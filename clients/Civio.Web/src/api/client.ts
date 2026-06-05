@@ -9,6 +9,7 @@ interface ApiErrorPayload {
   title?: string
   detail?: string
   errors?: Record<string, string[]>
+  code?: string
 }
 
 export const api: AxiosInstance = axios.create({
@@ -49,6 +50,13 @@ api.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+export function getErrorCode(error: unknown): string | null {
+  if (axios.isAxiosError<ApiErrorPayload>(error)) {
+    return error.response?.data?.code ?? null
+  }
+  return null
+}
 
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorPayload>(error)) {

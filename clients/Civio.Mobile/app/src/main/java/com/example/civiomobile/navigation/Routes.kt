@@ -4,6 +4,8 @@ object Routes {
     const val AUTH_GRAPH = "auth"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val VERIFY_EMAIL = "verify/{email}"
+    fun verifyEmail(email: String) = "verify/${android.net.Uri.encode(email)}"
 
     const val MAIN_GRAPH = "main"
     const val CATALOG = "catalog"
