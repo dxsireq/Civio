@@ -182,10 +182,10 @@ public sealed class AuthService : IAuthService
             .FirstOrDefaultAsync(x => x.Email == normalizedEmail, cancellationToken);
 
         if (user is null)
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new InvalidCredentialsException();
 
         if (!user.IsActive)
-            throw new UnauthorizedAccessException("User is inactive.");
+            throw new InactiveUserException();
 
         var verificationResult = _passwordHasher.VerifyHashedPassword(
             user,
@@ -193,7 +193,7 @@ public sealed class AuthService : IAuthService
             request.Password);
 
         if (verificationResult == PasswordVerificationResult.Failed)
-            throw new UnauthorizedAccessException("Invalid email or password.");
+            throw new InvalidCredentialsException();
 
         if (!user.IsEmailVerified)
             throw new EmailNotVerifiedException();

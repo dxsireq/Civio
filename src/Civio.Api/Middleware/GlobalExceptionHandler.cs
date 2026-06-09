@@ -13,7 +13,9 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         var (statusCode, code) = exception switch
         {
-            EmailNotVerifiedException => (StatusCodes.Status403Forbidden, "email_not_verified"),
+            EmailNotVerifiedException  => (StatusCodes.Status403Forbidden, "email_not_verified"),
+            InvalidCredentialsException => (StatusCodes.Status401Unauthorized, "invalid_credentials"),
+            InactiveUserException       => (StatusCodes.Status403Forbidden, "user_inactive"),
             ArgumentException => (StatusCodes.Status400BadRequest, (string?)null),
             UnauthorizedAccessException => (StatusCodes.Status403Forbidden, null),
             KeyNotFoundException => (StatusCodes.Status404NotFound, null),

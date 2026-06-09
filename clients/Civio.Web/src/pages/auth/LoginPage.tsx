@@ -105,6 +105,12 @@ export function LoginPage() {
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
           noValidate
         >
+          {formError && (
+            <div className="form-alert" role="alert">
+              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{formError}</span>
+            </div>
+          )}
           <div className="field">
             <label className="field-label" htmlFor="email">
               Email
@@ -122,12 +128,6 @@ export function LoginPage() {
                 {emailError}
               </div>
             )}
-            {formError && !emailError && (
-              <div className="field-error">
-                <AlertCircle size={13} />
-                {formError}
-              </div>
-            )}
           </div>
 
           <div className="field">
@@ -139,7 +139,7 @@ export function LoginPage() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
-                className={'input' + (passwordError ? ' has-error' : '')}
+                className={'input' + (passwordError || formError ? ' has-error' : '')}
                 {...register('password')}
               />
               <button

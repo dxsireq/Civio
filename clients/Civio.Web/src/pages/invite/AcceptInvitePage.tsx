@@ -459,11 +459,13 @@ function RegisterAndAccept({
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {errors.password && (
+            {errors.password ? (
               <div className="field-error">
                 <AlertCircle size={13} />
                 {errors.password.message}
               </div>
+            ) : (
+              <div className="field-help">Минимум 8 символов</div>
             )}
           </div>
 
@@ -487,9 +489,9 @@ function RegisterAndAccept({
           </div>
 
           {submitError && (
-            <div className="field-error">
-              <AlertCircle size={13} />
-              {submitError}
+            <div className="form-alert" role="alert">
+              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>{submitError}</span>
             </div>
           )}
 

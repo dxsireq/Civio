@@ -58,17 +58,41 @@ export function getErrorCode(error: unknown): string | null {
   return null
 }
 
+const codeMessages: Record<string, string> = {
+  invalid_credentials: 'Неверный email или пароль',
+  user_inactive: 'Аккаунт деактивирован. Обратитесь к администратору',
+}
+
+const statusMessages: Record<number, string> = {
+  400: 'Некорректный запрос',
+  401: 'Необходима авторизация',
+  403: 'Доступ запрещён',
+  404: 'Ресурс не найден',
+  409: 'Конфликт данных',
+  422: 'Некорректные данные',
+  429: 'Слишком много запросов',
+  500: 'Внутренняя ошибка сервера',
+  502: 'Сервер недоступен',
+  503: 'Сервис временно недоступен',
+}
+
 export function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError<ApiErrorPayload>(error)) {
     if (!error.response) {
       return 'Нет соединения с сервером'
     }
-    const data = error.response.data
+    const { status, data } = error.response
+    if (data?.code && codeMessages[data.code]) {
+      return codeMessages[data.code]
+    }
     if (data?.errors) {
       const first = Object.values(data.errors).flat()[0]
       if (first) return first
     }
-    return data?.error ?? data?.detail ?? data?.title ?? error.message
+    if (typeof data?.error === 'string' && data.error) return data.error
+    if (typeof data?.detail === 'string' && data.detail) return data.detail
+    if (typeof data?.title === 'string' && data.title) return data.title
+    return statusMessages[status] ?? 'Неизвестная ошибка'
   }
   if (error instanceof Error) return error.message
   return 'Неизвестная ошибка'

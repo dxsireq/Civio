@@ -116,6 +116,12 @@
 .field-label .req { color: var(--red-600); margin-left: 2px; }
 .field-help { font-size: 12px; color: var(--text-muted); }
 .field-error { font-size: 12px; color: var(--red-600); display: flex; align-items: center; gap: 4px; }
+.form-alert {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 12px; border-radius: var(--r);
+  background: var(--red-50); border: 1px solid #fecaca;
+  color: var(--red-700); font-size: 13px; line-height: 1.4;
+}
 .input, .textarea, .select {
   width: 100%; padding: 9px 12px; border-radius: var(--r);
   border: 1px solid var(--border-strong); background: white;
