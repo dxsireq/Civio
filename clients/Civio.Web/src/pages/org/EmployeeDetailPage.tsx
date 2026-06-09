@@ -726,10 +726,149 @@ function DaysTab({ empId }: { empId: string }) {
     <div style={{ padding: 24 }}>
       <div
         style={{
+          padding: 16,
+          background: 'var(--bg-soft)',
+          border: '1px dashed var(--border-strong)',
+          borderRadius: 'var(--r-lg)',
+          marginBottom: 14,
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
+          + Добавить рабочие дни
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 8,
+            marginBottom: 10,
+            flexWrap: 'wrap',
+          }}
+        >
+          <div className="field" style={{ margin: 0 }}>
+            <label className="field-label">Дни недели</label>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {WEEKDAYS.map(({ iso, label }) => (
+                <button
+                  key={iso}
+                  type="button"
+                  onClick={() => toggleDay(iso)}
+                  style={{
+                    width: 36,
+                    height: 34,
+                    border: '1px solid var(--border-strong)',
+                    borderRadius: 'var(--r-md)',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    background: form.selectedDays.includes(iso)
+                      ? 'var(--accent)'
+                      : 'var(--bg)',
+                    color: form.selectedDays.includes(iso)
+                      ? '#fff'
+                      : 'var(--text)',
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="field" style={{ margin: 0 }}>
+            <label className="field-label">До даты</label>
+            <input
+              className="input"
+              type="date"
+              value={form.untilDate}
+              onChange={(e) => setForm({ ...form, untilDate: e.target.value })}
+              style={{ width: 150 }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr) auto',
+            gap: 8,
+            alignItems: 'end',
+          }}
+        >
+          <div className="field">
+            <label className="field-label">Начало</label>
+            <input
+              className="input"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
+              value={form.startTime}
+              onChange={(e) =>
+                setForm({ ...form, startTime: e.target.value })
+              }
+            />
+          </div>
+          <div className="field">
+            <label className="field-label">Конец</label>
+            <input
+              className="input"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
+              value={form.endTime}
+              onChange={(e) =>
+                setForm({ ...form, endTime: e.target.value })
+              }
+            />
+          </div>
+          <div className="field">
+            <label className="field-label">Перерыв с</label>
+            <input
+              className="input"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
+              value={form.breakStart}
+              onChange={(e) =>
+                setForm({ ...form, breakStart: e.target.value })
+              }
+            />
+          </div>
+          <div className="field">
+            <label className="field-label">до</label>
+            <input
+              className="input"
+              type="text"
+              placeholder="ЧЧ:ММ"
+              pattern="[0-2][0-9]:[0-5][0-9]"
+              maxLength={5}
+              value={form.breakEnd}
+              onChange={(e) =>
+                setForm({ ...form, breakEnd: e.target.value })
+              }
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onAdd}
+            disabled={busy}
+          >
+            Добавить
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
           border: '1px solid var(--border)',
           borderRadius: 'var(--r-lg)',
           overflow: 'hidden',
-          marginBottom: 14,
         }}
       >
         <table className="table">
@@ -802,139 +941,6 @@ function DaysTab({ empId }: { empId: string }) {
             )}
           </tbody>
         </table>
-      </div>
-
-      <div
-        style={{
-          padding: 16,
-          background: 'var(--bg-soft)',
-          border: '1px dashed var(--border-strong)',
-          borderRadius: 'var(--r-lg)',
-        }}
-      >
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 12 }}>
-          + Добавить рабочие дни
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            gap: 8,
-            marginBottom: 10,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div className="field" style={{ margin: 0 }}>
-            <label className="field-label">Дни недели</label>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {WEEKDAYS.map(({ iso, label }) => (
-                <button
-                  key={iso}
-                  type="button"
-                  onClick={() => toggleDay(iso)}
-                  style={{
-                    width: 36,
-                    height: 34,
-                    border: '1px solid var(--border-strong)',
-                    borderRadius: 'var(--r-md)',
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    background: form.selectedDays.includes(iso)
-                      ? 'var(--accent)'
-                      : 'var(--bg)',
-                    color: form.selectedDays.includes(iso)
-                      ? '#fff'
-                      : 'var(--text)',
-                    transition: 'background 0.15s, color 0.15s',
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="field" style={{ margin: 0 }}>
-            <label className="field-label">До даты</label>
-            <input
-              className="input"
-              type="date"
-              value={form.untilDate}
-              onChange={(e) => setForm({ ...form, untilDate: e.target.value })}
-              style={{ width: 150 }}
-            />
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr) auto',
-            gap: 8,
-            alignItems: 'end',
-          }}
-        >
-          <div className="field">
-            <label className="field-label">Начало</label>
-            <input
-              className="input"
-              type="time"
-              value={form.startTime}
-              onChange={(e) =>
-                setForm({ ...form, startTime: e.target.value })
-              }
-            />
-          </div>
-          <div className="field">
-            <label className="field-label">Конец</label>
-            <input
-              className="input"
-              type="time"
-              value={form.endTime}
-              onChange={(e) =>
-                setForm({ ...form, endTime: e.target.value })
-              }
-            />
-          </div>
-          <div className="field">
-            <label className="field-label">Перерыв с</label>
-            <input
-              className="input"
-              type="text"
-              placeholder="ЧЧ:ММ"
-              pattern="[0-2][0-9]:[0-5][0-9]"
-              maxLength={5}
-              value={form.breakStart}
-              onChange={(e) =>
-                setForm({ ...form, breakStart: e.target.value })
-              }
-            />
-          </div>
-          <div className="field">
-            <label className="field-label">до</label>
-            <input
-              className="input"
-              type="text"
-              placeholder="ЧЧ:ММ"
-              pattern="[0-2][0-9]:[0-5][0-9]"
-              maxLength={5}
-              value={form.breakEnd}
-              onChange={(e) =>
-                setForm({ ...form, breakEnd: e.target.value })
-              }
-            />
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onAdd}
-            disabled={busy}
-          >
-            Добавить
-          </button>
-        </div>
       </div>
     </div>
   )
