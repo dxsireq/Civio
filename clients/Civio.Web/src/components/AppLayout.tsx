@@ -5,11 +5,13 @@ import {
   Calendar,
   Home,
   LogOut,
+  Menu,
   QrCode,
   Scissors,
   Shield,
   User as UserIcon,
   Users,
+  X,
 } from 'lucide-react'
 import { useAuthStore } from '../store/auth'
 import { TopbarSlotContext } from './Topbar'
@@ -28,6 +30,7 @@ export function AppLayout() {
   const isAdmin = user?.roles.includes('PlatformAdmin') ?? false
   const [topbarLeftEl, setTopbarLeftEl] = useState<HTMLDivElement | null>(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
 
   const onLogout = () => {
     logout()
@@ -42,14 +45,22 @@ export function AppLayout() {
   return (
     <div className="civio civio-app">
       <div className="layout">
-        <aside className="sidebar">
+        <aside className={'sidebar' + (navOpen ? ' nav-open' : '')}>
           <div className="sidebar-brand">
             <span className="civio-logo">
               <span className="civio-logo-mark">C</span>
               <span>Civio</span>
             </span>
           </div>
-          <nav className="sidebar-nav">
+          <button
+            className="sidebar-burger"
+            onClick={() => setNavOpen((o) => !o)}
+            aria-label="Меню"
+            aria-expanded={navOpen}
+          >
+            {navOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          <nav className="sidebar-nav" onClick={() => setNavOpen(false)}>
             <NavLink to={base} end className={linkClass}>
               <Home size={16} />
               Обзор
