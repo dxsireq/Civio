@@ -30,7 +30,7 @@ public interface IBookingService
 
     Task<BookingResponse> CancelAsync(
         Guid bookingId,
-        Guid citizenId,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<BookingSummaryResponse>> GetByOrganizationAsync(

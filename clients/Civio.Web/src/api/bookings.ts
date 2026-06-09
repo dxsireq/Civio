@@ -79,6 +79,11 @@ export async function completeBooking(id: string): Promise<Booking> {
   return res.data
 }
 
+export async function cancelBooking(id: string): Promise<Booking> {
+  const res = await api.post<Booking>(`/api/bookings/${id}/cancel`)
+  return res.data
+}
+
 export async function scanBookingQr(token: string): Promise<ScanQrResponse> {
   const res = await api.post<ScanQrResponse>('/api/bookings/scan', { token })
   return res.data

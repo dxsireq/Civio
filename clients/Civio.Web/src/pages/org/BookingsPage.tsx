@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Check, ChevronRight, Search, X as XIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
+  cancelBooking,
   confirmBooking,
   getOrgBookings,
   rejectBooking,
@@ -119,6 +120,19 @@ export function BookingsPage() {
       await rejectBooking(id)
       updateBooking(id, 'rejected')
       toast.success('Запись отклонена')
+    } catch (err) {
+      toast.error(getErrorMessage(err))
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const onCancel = async (id: string) => {
+    setBusyId(id)
+    try {
+      await cancelBooking(id)
+      updateBooking(id, 'cancelled')
+      toast.success('Запись отменена')
     } catch (err) {
       toast.error(getErrorMessage(err))
     } finally {
@@ -265,6 +279,35 @@ export function BookingsPage() {
                           >
                             <XIcon size={12} />
                             Отклонить
+                          </button>
+                        </div>
+                      ) : b.statusCode === 'confirmed' ? (
+                        <div style={{ display: 'inline-flex', gap: 4 }}>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: 'var(--red-600)' }}
+                            disabled={busyId === b.id}
+                            onClick={(ev) => {
+                              ev.stopPropagation()
+                              onCancel(b.id)
+                            }}
+                          >
+                            <XIcon size={12} />
+                            Отменить
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={(ev) => {
+                              ev.stopPropagation()
+                              navigate(
+                                `/organizations/${orgId}/bookings/${b.id}`,
+                              )
+                            }}
+                          >
+                            Открыть
+                            <ChevronRight size={13} />
                           </button>
                         </div>
                       ) : (

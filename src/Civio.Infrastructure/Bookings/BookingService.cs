@@ -260,18 +260,27 @@ public sealed class BookingService : IBookingService
 
     public async Task<BookingResponse> CancelAsync(
         Guid bookingId,
-        Guid citizenId,
+        Guid requestingUserId,
         CancellationToken cancellationToken = default)
     {
         var booking = await LoadBookingForUpdateAsync(bookingId, cancellationToken);
 
-        if (booking.CitizenId != citizenId)
-            throw new UnauthorizedAccessException("Only the booking owner can cancel.");
+        if (booking.CitizenId == requestingUserId)
+        {
+            // Citizen can cancel only while the booking is still pending confirmation.
+            if (booking.Status.Code != "created")
+                throw new InvalidOperationException($"Cannot cancel booking in status '{booking.Status.Code}'.");
+        }
+        else
+        {
+            // Org owner or the booking's assigned employee can cancel a confirmed booking.
+            if (booking.Status.Code != "confirmed")
+                throw new InvalidOperationException($"Cannot cancel booking in status '{booking.Status.Code}'.");
 
-        if (booking.Status.Code != "created")
-            throw new InvalidOperationException($"Cannot cancel booking in status '{booking.Status.Code}'.");
+            await RequireBookingStaffAsync(booking, requestingUserId, cancellationToken);
+        }
 
-        return await ChangeStatusAsync(booking, "cancelled", citizenId, cancellationToken);
+        return await ChangeStatusAsync(booking, "cancelled", requestingUserId, cancellationToken);
     }
 
     public async Task<IReadOnlyList<BookingSummaryResponse>> GetByOrganizationAsync(
@@ -467,6 +476,24 @@ public sealed class BookingService : IBookingService
              OrganizationAccess.IsEmployee(requestingUserId, booking.OrganizationId, org.Employees));
 
         if (!hasAccess)
+            throw new UnauthorizedAccessException("Access denied.");
+    }
+
+    private async Task RequireBookingStaffAsync(Booking booking, Guid requestingUserId, CancellationToken cancellationToken)
+    {
+        var org = await _dbContext.Organizations
+            .AsNoTracking()
+            .Include(o => o.Employees)
+            .FirstOrDefaultAsync(o => o.Id == booking.OrganizationId, cancellationToken);
+
+        if (org is null)
+            throw new UnauthorizedAccessException("Access denied.");
+
+        var isOwner = OrganizationAccess.IsOwner(requestingUserId, org);
+        var isBookingEmployee = booking.EmployeeId is not null &&
+            org.Employees.Any(e => e.Id == booking.EmployeeId && e.UserId == requestingUserId);
+
+        if (!isOwner && !isBookingEmployee)
             throw new UnauthorizedAccessException("Access denied.");
     }
 

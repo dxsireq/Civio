@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, X as XIcon } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
+  cancelBooking,
   completeBooking,
   confirmBooking,
   getBooking,
@@ -99,7 +100,7 @@ export function BookingDetailPage() {
   }
 
   const onAction = async (
-    action: 'confirm' | 'reject' | 'complete',
+    action: 'confirm' | 'reject' | 'complete' | 'cancel',
   ) => {
     setBusy(true)
     try {
@@ -108,7 +109,9 @@ export function BookingDetailPage() {
           ? confirmBooking
           : action === 'reject'
             ? rejectBooking
-            : completeBooking
+            : action === 'complete'
+              ? completeBooking
+              : cancelBooking
       const updated = await fn(booking.id)
       setBooking(updated)
       toast.success(
@@ -116,7 +119,9 @@ export function BookingDetailPage() {
           ? 'Запись подтверждена'
           : action === 'reject'
             ? 'Запись отклонена'
-            : 'Запись завершена',
+            : action === 'complete'
+              ? 'Запись завершена'
+              : 'Запись отменена',
       )
     } catch (err) {
       toast.error(getErrorMessage(err))
@@ -261,15 +266,29 @@ export function BookingDetailPage() {
                   >
                     Отметьте визит как завершённый после оказания услуги.
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-block"
-                    disabled={busy}
-                    onClick={() => onAction('complete')}
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
                   >
-                    <Check size={15} />
-                    Завершить
-                  </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-block"
+                      disabled={busy}
+                      onClick={() => onAction('complete')}
+                    >
+                      <Check size={15} />
+                      Завершить
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-block"
+                      style={{ color: 'var(--red-600)', borderColor: '#fecaca' }}
+                      disabled={busy}
+                      onClick={() => onAction('cancel')}
+                    >
+                      <XIcon size={15} />
+                      Отменить запись
+                    </button>
+                  </div>
                 </>
               )}
               {(status === 'completed' ||
