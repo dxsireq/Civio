@@ -51,6 +51,8 @@ fun LoginScreen(
     val state by viewModel.state.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
 
     val isLoading = state is AuthState.Loading
     val errorMessage = (state as? AuthState.Error)?.message
@@ -104,11 +106,13 @@ fun LoginScreen(
                     value = email,
                     onValueChange = {
                         email = it
+                        emailError = null
                         viewModel.resetError()
                     },
                     label = "Email",
                     keyboardType = KeyboardType.Email,
-                    isError = errorMessage != null,
+                    isError = emailError != null || errorMessage != null,
+                    errorText = emailError,
                     enabled = !isLoading
                 )
                 CivioTextField(
@@ -119,6 +123,8 @@ fun LoginScreen(
                     },
                     label = "Пароль",
                     isPassword = true,
+                    showPassword = showPassword,
+                    onToggleShowPassword = { showPassword = !showPassword },
                     isError = errorMessage != null,
                     errorText = errorMessage,
                     enabled = !isLoading
@@ -128,7 +134,14 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
             CivioButton(
                 text = "Войти",
-                onClick = { viewModel.login(email.trim(), password) },
+                onClick = {
+                    val trimmedEmail = email.trim()
+                    if (!android.util.Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches()) {
+                        emailError = "Введите корректный email"
+                        return@CivioButton
+                    }
+                    viewModel.login(trimmedEmail, password)
+                },
                 enabled = email.isNotBlank() && password.isNotBlank(),
                 loading = isLoading,
                 modifier = Modifier.fillMaxWidth()
