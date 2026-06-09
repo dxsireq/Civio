@@ -78,8 +78,11 @@ cp .env.example .env
 
 ### 2. База данных
 
+> Для локальной разработки поднимается **только** PostgreSQL.
+> Полный стек в Docker — см. раздел [«Демо-деплой»](#демо-деплой).
+
 ```bash
-docker compose up -d
+docker compose up -d postgres
 
 # Проверка
 docker ps
@@ -127,6 +130,49 @@ cd clients/Civio.Mobile
 ./gradlew assembleDebug
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
+
+---
+
+## Демо-деплой
+
+Весь стек в Docker за единым reverse-proxy (**Caddy**) — один порт, один origin,
+без CORS. Для защиты доступен с других устройств через бесплатный
+**Cloudflare Tunnel**. Подробности: [`docs/demo-deploy.md`](docs/demo-deploy.md).
+
+```
+cloudflared → Caddy ─┬─ /        → web (nginx, vite build)
+                     ├─ /api/*   → api (.NET 10)
+                     └─ api      → postgres
+```
+
+### Запуск полного стека
+
+```bash
+# 1. собрать веб на хосте (контейнер раздаёт готовый dist)
+cd clients/Civio.Web && npm install && npm run build && cd ../..
+
+# 2. поднять всё: postgres + api + web + caddy
+docker compose up -d --build
+docker compose ps
+```
+
+- Веб: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger`
+- API: `http://localhost:8080/api/...`
+
+### Доступ с других устройств (демо)
+
+```bash
+cloudflared tunnel --url http://localhost:8080
+```
+
+Публичный HTTPS-URL `https://<random>.trycloudflare.com` — веб, API и Swagger.
+Для мобильного APK подставить этот URL в `API_BASE_URL` и собрать (см.
+[`docs/demo-deploy.md`](docs/demo-deploy.md)).
+
+> Веб-клиент собирается на хосте (`npm run build`) — внутри Docker npm-install
+> падал по памяти/сети. Меняешь веб — пересобери `dist` и
+> `docker compose up -d --build web`.
 
 ---
 

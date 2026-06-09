@@ -1,0 +1,20 @@
+# Single origin reverse proxy on host network (:8080).
+# api runs host-net on :5214 (VPN tun for SMTP); web published on 127.0.0.1:8081.
+# Everything glued via loopback so VPN routing never touches it.
+:8080 {
+	handle /api/* {
+		reverse_proxy localhost:5214
+	}
+	handle /swagger/* {
+		reverse_proxy localhost:5214
+	}
+	handle /openapi/* {
+		reverse_proxy localhost:5214
+	}
+	handle /health/* {
+		reverse_proxy localhost:5214
+	}
+	handle {
+		reverse_proxy localhost:8081
+	}
+}

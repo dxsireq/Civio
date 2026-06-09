@@ -12,6 +12,51 @@ services:
     volumes:
       - civio_postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U civio_user -d civio_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Civio.Api/Dockerfile
+    container_name: civio-system-api
+    restart: unless-stopped
+    # Host network: api inherits host VPN tun (fake-ip) so SMTP -> Gmail works.
+    # In bridge mode the container can't route the VPN's 198.18.x.x addresses.
+    network_mode: host
+    env_file:
+      - .env   # Email__* SMTP creds (gitignored)
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: "5214"   # bind host :5214 (Caddy owns :8080)
+      ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=civio_system;Username=civio_user;Password=civio_password"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./clients/Civio.Web
+    container_name: civio-system-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"   # Caddy (host net) reaches web via loopback
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: civio-system-caddy
+    restart: unless-stopped
+    # Host network: glue api (:5214) + web (:8081) via loopback, bind :8080.
+    # Avoids bridge<->host routing through the VPN tun.
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - api
+      - web
 
 volumes:
   civio_postgres_data:
