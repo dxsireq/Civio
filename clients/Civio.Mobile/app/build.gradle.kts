@@ -30,7 +30,7 @@ android {
         buildConfigField(
             "String",
             "API_CONFIG_URL",
-            "\"https://gist.githubusercontent.com/dxsireq/5ec47b8f39814e78e8206f5066387d77/raw/3bdcfbe25b3406fb3f80345ba30984ce40bcfe60/gistfile1.txt\""
+            "\"https://gist.githubusercontent.com/dxsireq/5ec47b8f39814e78e8206f5066387d77/raw/gistfile1.txt\""
         )
     }
 
