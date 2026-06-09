@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.civiomobile.data.api.AuthEventBus
 import com.example.civiomobile.data.api.EmailNotVerifiedException
+import com.example.civiomobile.data.api.parseApiError
 import com.example.civiomobile.data.api.dto.AuthResponse
 import com.example.civiomobile.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -42,11 +43,10 @@ class AuthViewModel @Inject constructor(
                 .onSuccess { _state.value = AuthState.Authenticated(it) }
                 .onFailure { e ->
                     if (e is EmailNotVerifiedException) {
-                        // Resend a fresh code automatically, then go to verify screen
                         runCatching { repository.resendCode(email) }
                         _state.value = AuthState.PendingVerification(email)
                     } else {
-                        _state.value = AuthState.Error(e.message ?: "Ошибка входа")
+                        _state.value = AuthState.Error(parseApiError(e))
                     }
                 }
         }
@@ -66,7 +66,7 @@ class AuthViewModel @Inject constructor(
                 repository.register(email, password, firstName, lastName, middleName, phone)
             }
                 .onSuccess { _state.value = AuthState.PendingVerification(it) }
-                .onFailure { _state.value = AuthState.Error(it.message ?: "Ошибка регистрации") }
+                .onFailure { _state.value = AuthState.Error(parseApiError(it)) }
         }
     }
 
@@ -75,7 +75,7 @@ class AuthViewModel @Inject constructor(
             _state.value = AuthState.Loading
             runCatching { repository.verifyEmail(email, code) }
                 .onSuccess { _state.value = AuthState.Authenticated(it) }
-                .onFailure { _state.value = AuthState.Error(it.message ?: "Неверный код") }
+                .onFailure { _state.value = AuthState.Error(parseApiError(it)) }
         }
     }
 
