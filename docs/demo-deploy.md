@@ -48,7 +48,62 @@ cloudflared tunnel --url http://localhost:8080
 - **Swagger**: `https://<random>.trycloudflare.com/swagger`
 - **API**: `https://<random>.trycloudflare.com/api/...`
 
-## Мобильный APK
+### Ссылки в письмах (инвайты)
+
+Ссылка приглашения = `{App__WebClientBaseUrl}/invite/{token}`. По умолчанию
+`localhost` — с других устройств не откроется. Прописать URL туннеля в `.env`:
+
+```bash
+# .env
+App__WebClientBaseUrl=https://<random>.trycloudflare.com
+```
+
+Применить (env читается при создании контейнера):
+
+```bash
+docker compose up -d --force-recreate api
+```
+
+> Рантайм-конфиг, не build-time — пересборка образа не нужна. Меняется
+> туннель → правишь одну строку в `.env` + `--force-recreate api`.
+
+## Мобильный APK — авто-URL через remote config (вариант B)
+
+URL API в APK больше **не зашит намертво**. При старте приложение тянет
+актуальный URL из текстового файла (GitHub raw) → кладёт в prefs →
+OkHttp-интерсептор подменяет host каждого запроса. **APK собирается один раз**,
+меняешь только файл.
+
+### Один раз: настроить remote config
+
+1. Создать публичный репозиторий (напр. `civio-config`), файл `api-url.txt`,
+   одна строка — текущий URL туннеля:
+   ```
+   https://<random>.trycloudflare.com
+   ```
+2. В `app/build.gradle.kts` → `API_CONFIG_URL` вписать raw-ссылку файла:
+   ```kotlin
+   buildConfigField("String", "API_CONFIG_URL",
+       "\"https://raw.githubusercontent.com/<user>/civio-config/main/api-url.txt\"")
+   ```
+3. Собрать APK **один раз**, раздать:
+   ```bash
+   cd clients/Civio.Mobile
+   ./gradlew assembleRelease     # или assembleDebug
+   ```
+
+### При каждом новом туннеле
+
+- Поднял туннель → правишь `api-url.txt` (одна строка) → commit.
+- Перезапуск приложения на телефоне → новый URL подхватится. **APK не пересобирать.**
+
+> - Тянется при `onCreate` приложения. Туннель сменился при открытом app —
+>   перезапусти app.
+> - GitHub raw кэшируется CDN ~5 мин — смена URL доезжает с задержкой.
+> - Первый холодный старт: до завершения фетча используется fallback
+>   (`API_BASE_URL`); экран логина обычно ждёт дольше, чем идёт фетч.
+
+## Мобильный APK — ручная сборка (если без remote config)
 
 URL `trycloudflare` случайный и держится, пока жив процесс `cloudflared`.
 Поэтому: сперва поднять туннель, потом собрать APK с этим URL.

@@ -3,6 +3,7 @@ package com.example.civiomobile.di
 import com.example.civiomobile.BuildConfig
 import com.example.civiomobile.data.api.AuthInterceptor
 import com.example.civiomobile.data.api.CivioApi
+import com.example.civiomobile.data.api.DynamicBaseUrlInterceptor
 import com.example.civiomobile.data.api.UnauthorizedInterceptor
 import dagger.Module
 import dagger.Provides
@@ -33,10 +34,12 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
+        dynamicBaseUrlInterceptor: DynamicBaseUrlInterceptor,
         authInterceptor: AuthInterceptor,
         unauthorizedInterceptor: UnauthorizedInterceptor,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(dynamicBaseUrlInterceptor)
         .addInterceptor(authInterceptor)
         .addInterceptor(unauthorizedInterceptor)
         .addInterceptor(loggingInterceptor)

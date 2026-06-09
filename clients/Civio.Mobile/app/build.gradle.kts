@@ -20,9 +20,18 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Base URL for Civio API. Override per build type as needed.
+        // Fallback API base URL (used until the remote config is fetched).
         // 10.0.2.2 maps emulator -> host machine localhost.
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:5214/\"")
+
+        // Remote config: plain-text file holding the active API base URL
+        // (one line, e.g. the tunnel URL). Update the file -> all APKs repoint
+        // on next launch, no rebuild. Stable URL, set once.
+        buildConfigField(
+            "String",
+            "API_CONFIG_URL",
+            "\"https://gist.githubusercontent.com/dxsireq/5ec47b8f39814e78e8206f5066387d77/raw/3bdcfbe25b3406fb3f80345ba30984ce40bcfe60/gistfile1.txt\""
+        )
     }
 
     buildTypes {
@@ -101,4 +110,3 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
     }
 }
-
