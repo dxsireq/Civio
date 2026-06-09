@@ -154,7 +154,7 @@ private fun BookingCard(booking: BookingSummaryResponse, onClick: () -> Unit) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = booking.serviceName,
+                        text = booking.organizationName?.ifBlank { booking.serviceName } ?: booking.serviceName,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -163,6 +163,12 @@ private fun BookingCard(booking: BookingSummaryResponse, onClick: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     StatusPill(booking.statusCode)
                 }
+                Text(
+                    text = booking.serviceName,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = 6.dp)

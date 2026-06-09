@@ -148,8 +148,15 @@ private fun Content(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(8.dp))
+            DetailRow("Организация", booking.organizationName?.ifBlank { null } ?: "—")
+            val address = listOfNotNull(booking.organizationCity, booking.organizationAddress)
+                .filter { it.isNotBlank() }
+                .joinToString(", ")
+                .ifBlank { "—" }
+            DetailRow("Адрес", address)
             DetailRow("Дата", formatDateLong(booking.startAt))
             DetailRow("Время", "${formatTime(booking.startAt)} — ${formatTime(booking.endAt)}")
+            DetailRow("Цена", formatPrice(booking.price))
             val employee = listOfNotNull(booking.employeeFirstName, booking.employeeLastName)
                 .joinToString(" ")
                 .ifBlank { "—" }
@@ -252,3 +259,7 @@ private fun formatDateLong(iso: String): String = runCatching {
     val month = odt.month.getDisplayName(java.time.format.TextStyle.FULL, Locale("ru"))
     "${day.replaceFirstChar { it.uppercase() }}, ${odt.dayOfMonth} $month ${odt.year}"
 }.getOrDefault(iso)
+
+private fun formatPrice(price: Double?): String =
+    if (price == null) "—"
+    else "${price.toLong()} ₽"

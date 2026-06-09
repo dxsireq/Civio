@@ -19,8 +19,12 @@ data class CreateBookingRequest(
 data class BookingResponse(
     val id: String,
     val organizationId: String,
+    val organizationName: String? = null,
+    val organizationCity: String? = null,
+    val organizationAddress: String? = null,
     val serviceId: String,
     val serviceName: String,
+    val price: Double? = null,
     val employeeId: String? = null,
     val employeeFirstName: String? = null,
     val employeeLastName: String? = null,
@@ -41,6 +45,7 @@ data class BookingQrResponse(
 data class BookingSummaryResponse(
     val id: String,
     val organizationId: String,
+    val organizationName: String? = null,
     val serviceId: String,
     val serviceName: String,
     val employeeId: String? = null,

@@ -58,6 +58,13 @@ public sealed class BookingService : IBookingService
         if (service is null)
             throw new KeyNotFoundException($"Service {request.ServiceId} not found.");
 
+        var organization = await _dbContext.Organizations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == request.OrganizationId, cancellationToken);
+
+        if (organization is null)
+            throw new KeyNotFoundException($"Organization {request.OrganizationId} not found.");
+
         var startAtUtc = request.StartAt.ToUniversalTime();
 
         if (startAtUtc <= DateTimeOffset.UtcNow)
@@ -178,8 +185,12 @@ public sealed class BookingService : IBookingService
         return new BookingResponse(
             booking.Id,
             booking.OrganizationId,
+            organization.Name,
+            organization.City,
+            organization.Address,
             booking.ServiceId,
             service.Name,
+            service.Price,
             booking.EmployeeId,
             employee.FirstName,
             employee.LastName,
@@ -199,6 +210,7 @@ public sealed class BookingService : IBookingService
         return await _dbContext.Bookings
             .AsNoTracking()
             .Where(b => b.CitizenId == citizenId)
+            .Include(b => b.Organization)
             .Include(b => b.Service)
             .Include(b => b.Employee)
             .Include(b => b.Status)
@@ -215,6 +227,7 @@ public sealed class BookingService : IBookingService
     {
         var booking = await _dbContext.Bookings
             .AsNoTracking()
+            .Include(b => b.Organization)
             .Include(b => b.Service)
             .Include(b => b.Employee)
             .Include(b => b.Status)
@@ -283,6 +296,7 @@ public sealed class BookingService : IBookingService
         return await _dbContext.Bookings
             .AsNoTracking()
             .Where(b => b.OrganizationId == organizationId)
+            .Include(b => b.Organization)
             .Include(b => b.Service)
             .Include(b => b.Employee)
             .Include(b => b.Status)
@@ -428,6 +442,7 @@ public sealed class BookingService : IBookingService
     private async Task<Booking> LoadBookingForUpdateAsync(Guid bookingId, CancellationToken cancellationToken)
     {
         var booking = await _dbContext.Bookings
+            .Include(b => b.Organization)
             .Include(b => b.Service)
             .Include(b => b.Employee)
             .Include(b => b.Status)
@@ -500,8 +515,12 @@ public sealed class BookingService : IBookingService
         new(
             b.Id,
             b.OrganizationId,
+            b.Organization?.Name ?? string.Empty,
+            b.Organization?.City ?? string.Empty,
+            b.Organization?.Address ?? string.Empty,
             b.ServiceId,
             b.Service?.Name ?? string.Empty,
+            b.Service?.Price,
             b.EmployeeId,
             b.Employee?.FirstName,
             b.Employee?.LastName,
@@ -517,6 +536,7 @@ public sealed class BookingService : IBookingService
         new(
             b.Id,
             b.OrganizationId,
+            b.Organization?.Name ?? string.Empty,
             b.ServiceId,
             b.Service?.Name ?? string.Empty,
             b.EmployeeId,
