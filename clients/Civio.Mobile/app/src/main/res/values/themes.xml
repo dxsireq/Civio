@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.CivioMobile" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.CivioMobile" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- App is light-only (Compose forces lightColorScheme). Stop framework
+             Force Dark from auto-inverting the UI on devices in dark mode. -->
+        <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
+    </style>
 </resources>
