@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -320,6 +320,42 @@ function RegisterAndAccept({
     },
   })
 
+  const phonePrevRef = useRef('')
+
+  const formatPhone = (digits: string): string => {
+    if (!digits) return ''
+    const a = digits[0]
+    const b = digits.slice(1, 4)
+    const c = digits.slice(4, 7)
+    const d = digits.slice(7, 9)
+    const e = digits.slice(9, 11)
+    let out = '+' + a
+    if (b) out += ' (' + b
+    if (b.length === 3) out += ')'
+    if (c) out += ' ' + c
+    if (d) out += '-' + d
+    if (e) out += '-' + e
+    return out
+  }
+
+  const phoneReg = register('phone')
+
+  const handlePhoneChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
+    const prev = phonePrevRef.current
+    const raw = ev.target.value
+    let digits = raw.replace(/\D/g, '')
+    const prevDigits = prev.replace(/\D/g, '')
+    if (raw.length < prev.length && digits === prevDigits && digits.length > 0) {
+      digits = digits.slice(0, -1)
+    }
+    if (digits[0] === '8') digits = '7' + digits.slice(1)
+    digits = digits.slice(0, 11)
+    const formatted = formatPhone(digits)
+    ev.target.value = formatted
+    phonePrevRef.current = formatted
+    void phoneReg.onChange(ev)
+  }
+
   const onSubmit = async (data: FormData) => {
     setSubmitError(null)
     try {
@@ -427,7 +463,8 @@ function RegisterAndAccept({
               id="phone"
               type="tel"
               className={fieldClass(!!errors.phone)}
-              {...register('phone')}
+              {...phoneReg}
+              onChange={handlePhoneChange}
             />
             {errors.phone && (
               <div className="field-error">

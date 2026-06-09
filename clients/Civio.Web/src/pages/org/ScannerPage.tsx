@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Check, QrCode, RotateCw, X as XIcon } from 'lucide-react'
+import { Camera, Check, ImageIcon, QrCode, RotateCw, X as XIcon } from 'lucide-react'
 import jsQR from 'jsqr'
 import {
   scanBookingQr,
@@ -37,6 +37,7 @@ export function ScannerPage() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const rafRef = useRef<number | null>(null)
   const scannedRef = useRef(false)
@@ -137,6 +138,44 @@ export function ScannerPage() {
 
   const restart = () => setState({ kind: 'scanning' })
 
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    const url = URL.createObjectURL(file)
+    try {
+      const img = new Image()
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = () => reject(new Error('Не удалось загрузить изображение'))
+        img.src = url
+      })
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth
+      canvas.height = img.naturalHeight
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })
+      if (!ctx) throw new Error('Canvas context unavailable')
+      ctx.drawImage(img, 0, 0)
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert',
+      })
+      if (!code?.data) {
+        setState({ kind: 'error', message: 'QR-код не найден в изображении' })
+        return
+      }
+      await submitToken(code.data)
+    } catch (err) {
+      setState({
+        kind: 'error',
+        message: err instanceof Error ? err.message : 'Ошибка при чтении файла',
+      })
+    } finally {
+      URL.revokeObjectURL(url)
+    }
+  }
+
   const onManualSubmit = async () => {
     const token = manualToken.trim()
     if (!token) return
@@ -218,13 +257,23 @@ export function ScannerPage() {
                   <Camera size={14} />
                   Перезапустить
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => setManualOpen(true)}
-                >
-                  Ввести код вручную
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon size={14} />
+                    Из файла
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => setManualOpen(true)}
+                  >
+                    Ввести вручную
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -234,8 +283,20 @@ export function ScannerPage() {
           )}
 
           {state.kind === 'error' && (
-            <ErrorCard message={state.message} onAgain={restart} />
+            <ErrorCard
+              message={state.message}
+              onAgain={restart}
+              onFromFile={() => fileInputRef.current?.click()}
+            />
           )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={onFileChange}
+          />
         </div>
       </div>
 
@@ -390,9 +451,11 @@ function SuccessCard({
 function ErrorCard({
   message,
   onAgain,
+  onFromFile,
 }: {
   message: string
   onAgain: () => void
+  onFromFile?: () => void
 }) {
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
@@ -441,7 +504,7 @@ function ErrorCard({
           {message}
         </div>
       </div>
-      <div style={{ padding: 24 }}>
+      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <button
           type="button"
           className="btn btn-primary btn-block"
@@ -450,6 +513,16 @@ function ErrorCard({
           <RotateCw size={15} />
           Попробовать снова
         </button>
+        {onFromFile && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={onFromFile}
+          >
+            <ImageIcon size={15} />
+            Загрузить из файла
+          </button>
+        )}
       </div>
     </div>
   )
