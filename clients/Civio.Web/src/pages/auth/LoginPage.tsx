@@ -168,19 +168,6 @@ export function LoginPage() {
                 {passwordError}
               </div>
             )}
-            <div style={{ textAlign: "right", marginTop: 6 }}>
-              <Link
-                to="/forgot-password"
-                style={{
-                  fontSize: 13,
-                  color: "var(--indigo-700)",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
-              >
-                Забыли пароль?
-              </Link>
-            </div>
           </div>
 
           <button
