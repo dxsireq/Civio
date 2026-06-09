@@ -16,6 +16,7 @@ export interface AuthUser {
 interface AuthState {
   token: string | null
   user: AuthUser | null
+  isLoggingOut: boolean
   setAuth: (token: string, user: AuthUser) => void
   setUser: (user: AuthUser) => void
   logout: () => void
@@ -36,11 +37,12 @@ function loadUser(): AuthUser | null {
 export const useAuthStore = create<AuthState>((set, get) => ({
   token: localStorage.getItem(TOKEN_KEY),
   user: loadUser(),
+  isLoggingOut: false,
 
   setAuth: (token, user) => {
     localStorage.setItem(TOKEN_KEY, token)
     localStorage.setItem(USER_KEY, JSON.stringify(user))
-    set({ token, user })
+    set({ token, user, isLoggingOut: false })
   },
 
   setUser: (user) => {
@@ -51,7 +53,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: () => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
-    set({ token: null, user: null })
+    set({ token: null, user: null, isLoggingOut: true })
   },
 
   isAuthenticated: () => get().token !== null,
