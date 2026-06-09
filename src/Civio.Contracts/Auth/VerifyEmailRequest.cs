@@ -3,7 +3,9 @@ using System.ComponentModel.DataAnnotations;
 namespace Civio.Contracts.Auth;
 
 public sealed record VerifyEmailRequest(
-    [property: Required, EmailAddress]
+    [property: Required(ErrorMessage = "Введите email"),
+               EmailAddress(ErrorMessage = "Некорректный формат email")]
     string Email,
-    [property: Required, RegularExpression(@"^\d{6}$", ErrorMessage = "Code must be 6 digits.")]
+    [property: Required(ErrorMessage = "Введите код подтверждения"),
+               RegularExpression(@"^\d{6}$", ErrorMessage = "Код должен состоять из 6 цифр")]
     string Code);

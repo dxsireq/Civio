@@ -14,6 +14,15 @@ using Civio.Api.Middleware;
 using Civio.Infrastructure;
 
 
+static string TranslateValidationMessage(string msg) => msg switch
+{
+    var m when m.Contains("must be a string") => "Поле должно быть строкой",
+    var m when m.Contains("is not valid") => "Некорректное значение",
+    var m when m.Contains("could not be converted") => "Некорректный формат значения",
+    var m when m.Contains("is required") => "Поле обязательно для заполнения",
+    _ => msg
+};
+
 DotNetEnv.Env.TraversePath().Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,7 +90,23 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("PlatformAdmin", policy => policy.RequireRole("PlatformAdmin"));
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = ctx =>
+    {
+        if (ctx.ProblemDetails is HttpValidationProblemDetails vp)
+        {
+            var translated = new Dictionary<string, string[]>();
+            foreach (var (key, msgs) in vp.Errors)
+            {
+                translated[key] = msgs.Select(TranslateValidationMessage).ToArray();
+            }
+            vp.Errors.Clear();
+            foreach (var (key, msgs) in translated)
+                vp.Errors[key] = msgs;
+        }
+    };
+});
 builder.Services.AddValidation();
 builder.Services.AddInfrastructure(builder.Configuration);
 
