@@ -1,7 +1,8 @@
-# Single origin reverse proxy on host network (:8080).
-# api runs host-net on :5214 (VPN tun for SMTP); web published on 127.0.0.1:8081.
-# Everything glued via loopback so VPN routing never touches it.
-:8080 {
+# Single origin reverse proxy on host network.
+# Local dev: SITE_ADDRESS unset -> binds :8080 (plain HTTP).
+# Prod (VPS): SITE_ADDRESS=<domain> -> Caddy auto-provisions Let's Encrypt TLS on :443.
+# api runs host-net on :5214; web published on 127.0.0.1:8081. Glued via loopback.
+{$SITE_ADDRESS::8080} {
 	handle /api/* {
 		reverse_proxy localhost:5214
 	}

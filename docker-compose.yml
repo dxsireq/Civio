@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: civio_user
       POSTGRES_PASSWORD: civio_password
     ports:
-      - "5432:5432"
+      # Loopback only: DB never exposed on the VPS public IP.
+      - "127.0.0.1:5432:5432"
     volumes:
       - civio_postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -30,7 +31,7 @@ services:
     env_file:
       - .env   # Email__* SMTP creds (gitignored)
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_HTTP_PORTS: "5214"   # bind host :5214 (Caddy owns :8080)
       ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=civio_system;Username=civio_user;Password=civio_password"
     depends_on:
@@ -52,11 +53,18 @@ services:
     # Host network: glue api (:5214) + web (:8081) via loopback, bind :8080.
     # Avoids bridge<->host routing through the VPN tun.
     network_mode: host
+    environment:
+      # Local dev: unset -> Caddyfile default :8080. Prod: set domain in .env for auto-TLS.
+      SITE_ADDRESS: ${SITE_ADDRESS:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # persists Let's Encrypt certs across restarts (avoid LE rate limit)
+      - caddy_config:/config
     depends_on:
       - api
       - web
 
 volumes:
   civio_postgres_data:
+  caddy_data:
+  caddy_config:
