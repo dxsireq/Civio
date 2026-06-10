@@ -378,6 +378,10 @@ INSERT INTO notification_statuses (code, name) VALUES
 --   employee3@civio.test  / Test1234!  — works in org2 (emp3)
 --   client2@civio.test    / Test1234!  — citizen with completed + rejected bookings
 --   client3@civio.test    / Test1234!  — clean citizen (no bookings)
+--   client4@civio.test    / Test1234!  — citizen, org1 confirmed + completed manicure
+--   client5@civio.test    / Test1234!  — citizen, org1 created pedicure
+--   client6@civio.test    / Test1234!  — citizen, org1 confirmed facial
+--   (employee2@civio.test now also linked to org1 as emp5 — мастер маникюра)
 --
 -- Fixed UUIDs for predictable Postman / integration testing:
 --   users        a0000000-0000-0000-0000-00000000000{1..b}
@@ -905,4 +909,333 @@ INSERT INTO device_push_tokens (id, user_id, token, platform, is_active, created
         'FCM_TOKEN_CLIENT_IOS_FAKE_TEST_BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB', 'ios', true, NOW()),
     ('16000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-00000000000a',
         'FCM_TOKEN_CLIENT2_ANDROID_FAKE_TEST_CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC', 'android', true, NOW())
+ON CONFLICT (token) DO NOTHING;
+
+-- =============================================================
+-- EXTENDED SEED 2 — org1 deep data ("Студия красоты Civio")
+-- Fills org1 with more staff, services and bookings.
+-- Presentation window: now (2026-06-10) → 2026-07-01.
+--   Past booking dated 2026-05-18 (Mon). Future bookings 2026-06-15..24.
+-- New fixed UUIDs:
+--   users        a0000000-...-00000000000{c..e}
+--   employees    c0000000-...-00000000000{5,6}
+--   services     d0000000-...-00000000000{5..8}
+--   categories   15000000-...-000000000004
+--   work_days    e0000000-...-00000000000{9..e}
+--   booking_slots f0000000-...-00000000000{7..d}
+--   bookings     10000000-...-00000000000{6..a}
+--   booking_qr   11000000-...-00000000000{3..5}
+--   notifications 12000000-...-00000000000{7..b}
+--   device_push  16000000-...-00000000000{4,5}
+-- New accounts (password Test1234!):
+--   client4@civio.test / client5@civio.test / client6@civio.test — citizens
+--   employee2@civio.test — now linked to org1 (emp5, мастер маникюра)
+-- =============================================================
+
+-- -------------------------------------------------------------
+-- Additional citizens
+-- -------------------------------------------------------------
+DO $seed_users2$
+DECLARE
+    pw TEXT := 'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==';
+BEGIN
+    INSERT INTO users (id, email, password_hash, first_name, last_name, phone, is_active, is_email_verified, created_at) VALUES
+        ('a0000000-0000-0000-0000-00000000000c', 'client4@civio.test', pw, 'Игорь', 'Лебедев',   '+7 900 000-00-0c', true, true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000d', 'client5@civio.test', pw, 'Ольга', 'Захарова',  '+7 900 000-00-0d', true, true, NOW()),
+        ('a0000000-0000-0000-0000-00000000000e', 'client6@civio.test', pw, 'Роман', 'Григорьев', '+7 900 000-00-0e', true, true, NOW())
+    ON CONFLICT (email) DO NOTHING;
+END
+$seed_users2$;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM (VALUES
+    ('a0000000-0000-0000-0000-00000000000c'::uuid),
+    ('a0000000-0000-0000-0000-00000000000d'::uuid),
+    ('a0000000-0000-0000-0000-00000000000e'::uuid)
+) u(id)
+CROSS JOIN roles r
+WHERE r.name = 'Citizen'
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Additional service category for org1
+-- -------------------------------------------------------------
+INSERT INTO service_categories (id, organization_id, name, description) VALUES
+    ('15000000-0000-0000-0000-000000000004', 'b0000000-0000-0000-0000-000000000001', 'Косметология', 'Уход за лицом')
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Additional services for org1
+-- -------------------------------------------------------------
+INSERT INTO services (id, organization_id, category_id, name, description, duration_minutes, price, is_active, created_at) VALUES
+    ('d0000000-0000-0000-0000-000000000005', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000002',
+        'Маникюр классический', 'Классический маникюр с покрытием', 60, 2200.00, true, NOW()),
+    ('d0000000-0000-0000-0000-000000000006', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000002',
+        'Педикюр', 'Аппаратный педикюр', 90, 2800.00, true, NOW()),
+    ('d0000000-0000-0000-0000-000000000007', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000004',
+        'Чистка лица', 'Комбинированная чистка лица', 75, 3500.00, true, NOW()),
+    ('d0000000-0000-0000-0000-000000000008', 'b0000000-0000-0000-0000-000000000001', '15000000-0000-0000-0000-000000000001',
+        'Укладка', 'Праздничная укладка', 45, 1800.00, true, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Additional employees for org1
+--   emp5: linked to employee2@civio.test (мастер маникюра)
+--   emp6: no user account (косметолог)
+-- -------------------------------------------------------------
+INSERT INTO employees (id, user_id, organization_id, first_name, last_name, position, phone, email, is_active, created_at) VALUES
+    ('c0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000008',
+        'b0000000-0000-0000-0000-000000000001',
+        'Ольга', 'Соколова', 'Мастер маникюра', '+7 900 000-00-08', 'employee2@civio.test', true, NOW()),
+
+    ('c0000000-0000-0000-0000-000000000006', NULL,
+        'b0000000-0000-0000-0000-000000000001',
+        'Ирина', 'Беляева', 'Косметолог', '+7 900 000-00-23', NULL, true, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Employee ↔ Service links
+-- -------------------------------------------------------------
+INSERT INTO employee_services (employee_id, service_id) VALUES
+    -- emp5: manicure + pedicure
+    ('c0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000005'),
+    ('c0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000006'),
+    -- emp6: facial cleaning
+    ('c0000000-0000-0000-0000-000000000006', 'd0000000-0000-0000-0000-000000000007'),
+    -- emp1 also does укладка
+    ('c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000008')
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Schedule templates
+--   emp5: Mon–Sat 10:00–19:00, break 14:00–15:00
+--   emp6: Wed–Sun 11:00–20:00
+-- -------------------------------------------------------------
+INSERT INTO schedule_templates (employee_id, day_of_week, start_time, end_time, break_start, break_end, is_active)
+SELECT 'c0000000-0000-0000-0000-000000000005', d, '10:00'::time, '19:00'::time, '14:00'::time, '15:00'::time, true
+FROM generate_series(1, 6) AS d
+ON CONFLICT DO NOTHING;
+
+INSERT INTO schedule_templates (employee_id, day_of_week, start_time, end_time, is_active)
+SELECT 'c0000000-0000-0000-0000-000000000006', d, '11:00'::time, '20:00'::time, true
+FROM generate_series(3, 7) AS d
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Work days
+-- -------------------------------------------------------------
+INSERT INTO work_days (id, employee_id, work_date, start_time, end_time, break_start, break_end, is_working, created_at) VALUES
+    -- emp5 past day (Mon, May 18) for COMPLETED booking
+    ('e0000000-0000-0000-0000-000000000009', 'c0000000-0000-0000-0000-000000000005', '2026-05-18', '10:00', '19:00', '14:00', '15:00', true, NOW()),
+    -- emp5 future days (Mon, Jun 15 / Mon, Jun 22)
+    ('e0000000-0000-0000-0000-00000000000a', 'c0000000-0000-0000-0000-000000000005', '2026-06-15', '10:00', '19:00', '14:00', '15:00', true, NOW()),
+    ('e0000000-0000-0000-0000-00000000000b', 'c0000000-0000-0000-0000-000000000005', '2026-06-22', '10:00', '19:00', '14:00', '15:00', true, NOW()),
+    -- emp6 future days (Wed, Jun 17 / Wed, Jun 24)
+    ('e0000000-0000-0000-0000-00000000000c', 'c0000000-0000-0000-0000-000000000006', '2026-06-17', '11:00', '20:00', NULL, NULL, true, NOW()),
+    ('e0000000-0000-0000-0000-00000000000d', 'c0000000-0000-0000-0000-000000000006', '2026-06-24', '11:00', '20:00', NULL, NULL, true, NOW()),
+    -- emp1 extra day (Tue, Jun 16) for укладка booking
+    ('e0000000-0000-0000-0000-00000000000e', 'c0000000-0000-0000-0000-000000000001', '2026-06-16', '09:00', '18:00', '13:00', '14:00', true, NOW())
+ON CONFLICT (employee_id, work_date) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Booking slots
+-- -------------------------------------------------------------
+INSERT INTO booking_slots (id, employee_id, service_id, work_day_id, status_id, start_at, end_at, created_at) VALUES
+    -- f7: emp5 past slot — COMPLETED manicure (2026-05-18)
+    ('f0000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000005',
+        'd0000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-000000000009',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-05-18 11:00:00+00', '2026-05-18 12:00:00+00', NOW()),
+
+    -- f8: emp5 future slot — CONFIRMED manicure (2026-06-15, with QR)
+    ('f0000000-0000-0000-0000-000000000008', 'c0000000-0000-0000-0000-000000000005',
+        'd0000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-00000000000a',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-06-15 10:00:00+00', '2026-06-15 11:00:00+00', NOW()),
+
+    -- f9: emp5 future slot — CREATED pedicure (2026-06-22)
+    ('f0000000-0000-0000-0000-000000000009', 'c0000000-0000-0000-0000-000000000005',
+        'd0000000-0000-0000-0000-000000000006', 'e0000000-0000-0000-0000-00000000000b',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-06-22 12:00:00+00', '2026-06-22 13:30:00+00', NOW()),
+
+    -- fa: emp6 future slot — CONFIRMED facial (2026-06-17, with QR)
+    ('f0000000-0000-0000-0000-00000000000a', 'c0000000-0000-0000-0000-000000000006',
+        'd0000000-0000-0000-0000-000000000007', 'e0000000-0000-0000-0000-00000000000c',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-06-17 11:00:00+00', '2026-06-17 12:15:00+00', NOW()),
+
+    -- fb: emp1 future slot — CONFIRMED укладка (2026-06-16)
+    ('f0000000-0000-0000-0000-00000000000b', 'c0000000-0000-0000-0000-000000000001',
+        'd0000000-0000-0000-0000-000000000008', 'e0000000-0000-0000-0000-00000000000e',
+        (SELECT id FROM slot_statuses WHERE code = 'booked'),
+        '2026-06-16 09:00:00+00', '2026-06-16 09:45:00+00', NOW()),
+
+    -- fc: emp5 free slot (available, no booking) — 2026-06-15
+    ('f0000000-0000-0000-0000-00000000000c', 'c0000000-0000-0000-0000-000000000005',
+        'd0000000-0000-0000-0000-000000000005', 'e0000000-0000-0000-0000-00000000000a',
+        (SELECT id FROM slot_statuses WHERE code = 'available'),
+        '2026-06-15 15:00:00+00', '2026-06-15 16:00:00+00', NOW()),
+
+    -- fd: emp6 admin-blocked slot, no booking — 2026-06-24
+    ('f0000000-0000-0000-0000-00000000000d', 'c0000000-0000-0000-0000-000000000006',
+        NULL, 'e0000000-0000-0000-0000-00000000000d',
+        (SELECT id FROM slot_statuses WHERE code = 'blocked'),
+        '2026-06-24 11:00:00+00', '2026-06-24 12:00:00+00', NOW())
+ON CONFLICT (employee_id, start_at, end_at) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Bookings
+-- -------------------------------------------------------------
+INSERT INTO bookings (id, citizen_id, organization_id, employee_id, service_id, slot_id, status_id, comment, created_at, updated_at) VALUES
+    -- b6: CONFIRMED — client4, manicure with emp5 (has QR)
+    ('10000000-0000-0000-0000-000000000006',
+        'a0000000-0000-0000-0000-00000000000c', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000005',
+        'f0000000-0000-0000-0000-000000000008',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        NULL, NOW(), NOW()),
+
+    -- b7: CREATED — client5, pedicure with emp5
+    ('10000000-0000-0000-0000-000000000007',
+        'a0000000-0000-0000-0000-00000000000d', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000006',
+        'f0000000-0000-0000-0000-000000000009',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        'Можно чуть пораньше?', NOW(), NULL),
+
+    -- b8: CONFIRMED — client6, facial with emp6 (has QR)
+    ('10000000-0000-0000-0000-000000000008',
+        'a0000000-0000-0000-0000-00000000000e', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000006', 'd0000000-0000-0000-0000-000000000007',
+        'f0000000-0000-0000-0000-00000000000a',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        NULL, NOW(), NOW()),
+
+    -- b9: COMPLETED — client4, past manicure with emp5 (QR used)
+    ('10000000-0000-0000-0000-000000000009',
+        'a0000000-0000-0000-0000-00000000000c', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000005', 'd0000000-0000-0000-0000-000000000005',
+        'f0000000-0000-0000-0000-000000000007',
+        (SELECT id FROM booking_statuses WHERE code = 'completed'),
+        NULL, NOW(), NOW()),
+
+    -- b10: CONFIRMED — client (a..03), укладка with emp1
+    ('10000000-0000-0000-0000-00000000000a',
+        'a0000000-0000-0000-0000-000000000003', 'b0000000-0000-0000-0000-000000000001',
+        'c0000000-0000-0000-0000-000000000001', 'd0000000-0000-0000-0000-000000000008',
+        'f0000000-0000-0000-0000-00000000000b',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'К событию вечером', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Booking status history
+-- -------------------------------------------------------------
+INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+    -- b6: created → confirmed
+    ('10000000-0000-0000-0000-000000000006',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000008', 'Подтверждено мастером'),
+
+    -- b8: created → confirmed
+    ('10000000-0000-0000-0000-000000000008',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000001', NULL),
+
+    -- b9: created → confirmed → completed
+    ('10000000-0000-0000-0000-000000000009',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000008', NULL),
+    ('10000000-0000-0000-0000-000000000009',
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        (SELECT id FROM booking_statuses WHERE code = 'completed'),
+        'a0000000-0000-0000-0000-000000000008', 'QR проверен'),
+
+    -- b10: created → confirmed
+    ('10000000-0000-0000-0000-00000000000a',
+        (SELECT id FROM booking_statuses WHERE code = 'created'),
+        (SELECT id FROM booking_statuses WHERE code = 'confirmed'),
+        'a0000000-0000-0000-0000-000000000002', 'Подтверждено сотрудником');
+
+-- -------------------------------------------------------------
+-- Booking QR codes
+-- -------------------------------------------------------------
+INSERT INTO booking_qr_codes (id, booking_id, token, expires_at, used_at, created_at) VALUES
+    -- b6 confirmed — valid, unused (expires 2026-06-15 12:00 UTC)
+    ('11000000-0000-0000-0000-000000000003',
+        '10000000-0000-0000-0000-000000000006',
+        'QR_TOKEN_ORG1_MANICURE_CONFIRMED_FAKE_BASE64URL_DDDDDDDDDDDDDDDDDDD',
+        '2026-06-15 12:00:00+00', NULL, NOW()),
+
+    -- b8 confirmed — valid, unused (expires 2026-06-17 14:00 UTC)
+    ('11000000-0000-0000-0000-000000000004',
+        '10000000-0000-0000-0000-000000000008',
+        'QR_TOKEN_ORG1_FACIAL_CONFIRMED_FAKE_BASE64URL_EEEEEEEEEEEEEEEEEEEEE',
+        '2026-06-17 14:00:00+00', NULL, NOW()),
+
+    -- b9 completed — already used (2026-05-18)
+    ('11000000-0000-0000-0000-000000000005',
+        '10000000-0000-0000-0000-000000000009',
+        'QR_TOKEN_ORG1_MANICURE_COMPLETED_FAKE_BASE64URL_FFFFFFFFFFFFFFFFFFF',
+        '2026-05-18 12:00:00+00', '2026-05-18 11:50:00+00', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Notifications
+-- -------------------------------------------------------------
+INSERT INTO notifications (id, user_id, booking_id, type_id, channel_id, status_id, title, message, error_message, created_at, sent_at) VALUES
+    -- b6 created, email, sent
+    ('12000000-0000-0000-0000-000000000007',
+        'a0000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-000000000006',
+        (SELECT id FROM notification_types    WHERE code = 'booking_created'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись создана', 'Маникюр классический 2026-06-15 10:00 создана', NULL, NOW(), NOW()),
+
+    -- b6 confirmed, push, sent
+    ('12000000-0000-0000-0000-000000000008',
+        'a0000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-000000000006',
+        (SELECT id FROM notification_types    WHERE code = 'booking_confirmed'),
+        (SELECT id FROM notification_channels WHERE code = 'push'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись подтверждена', 'Маникюр классический 2026-06-15 10:00', NULL, NOW(), NOW()),
+
+    -- b7 created, email, sent
+    ('12000000-0000-0000-0000-000000000009',
+        'a0000000-0000-0000-0000-00000000000d', '10000000-0000-0000-0000-000000000007',
+        (SELECT id FROM notification_types    WHERE code = 'booking_created'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись создана', 'Педикюр 2026-06-22 12:00 создана', NULL, NOW(), NOW()),
+
+    -- b8 confirmed, email, sent
+    ('12000000-0000-0000-0000-00000000000a',
+        'a0000000-0000-0000-0000-00000000000e', '10000000-0000-0000-0000-000000000008',
+        (SELECT id FROM notification_types    WHERE code = 'booking_confirmed'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись подтверждена', 'Чистка лица 2026-06-17 11:00 подтверждена', NULL, NOW(), NOW()),
+
+    -- b9 completed, email, sent
+    ('12000000-0000-0000-0000-00000000000b',
+        'a0000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-000000000009',
+        (SELECT id FROM notification_types    WHERE code = 'booking_completed'),
+        (SELECT id FROM notification_channels WHERE code = 'email'),
+        (SELECT id FROM notification_statuses WHERE code = 'sent'),
+        'Запись завершена', 'Маникюр классический 2026-05-18 11:00 завершена', NULL, NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Device push tokens
+-- -------------------------------------------------------------
+INSERT INTO device_push_tokens (id, user_id, token, platform, is_active, created_at) VALUES
+    ('16000000-0000-0000-0000-000000000004', 'a0000000-0000-0000-0000-00000000000c',
+        'FCM_TOKEN_CLIENT4_ANDROID_FAKE_TEST_DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD', 'android', true, NOW()),
+    ('16000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-00000000000e',
+        'FCM_TOKEN_CLIENT6_IOS_FAKE_TEST_EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE', 'ios', true, NOW())
 ON CONFLICT (token) DO NOTHING;
