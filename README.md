@@ -131,21 +131,10 @@ cd clients/Civio.Mobile
 adb install app/build/outputs/apk/debug/app-debug.apk
 ```
 
----
+### Альтернатива: Весь стек в Docker
 
-## Демо-деплой
-
-Весь стек в Docker за единым reverse-proxy (**Caddy**) — один порт, один origin,
-без CORS. Для защиты доступен с других устройств через бесплатный
-**Cloudflare Tunnel**. Подробности: [`docs/demo-deploy.md`](docs/demo-deploy.md).
-
-```
-cloudflared → Caddy ─┬─ /        → web (nginx, vite build)
-                     ├─ /api/*   → api (.NET 10)
-                     └─ api      → postgres
-```
-
-### Запуск полного стека
+Вместо шагов 2–4 — поднять postgres + API + web за единым reverse-proxy
+(Caddy) одной командой. Один origin, без CORS.
 
 ```bash
 # 1. собрать веб на хосте (контейнер раздаёт готовый dist)
@@ -160,21 +149,13 @@ docker compose ps
 - Swagger: `http://localhost:8080/swagger`
 - API: `http://localhost:8080/api/...`
 
-### Доступ с других устройств (демо)
+`.env` оставить с пустыми прод-переменными (`SITE_ADDRESS`,
+`ASPNETCORE_ENVIRONMENT`, `Jwt__Secret`) — Caddy биндит `:8080` без TLS, API
+стартует в `Development`.
 
-```bash
-cloudflared tunnel --url http://localhost:8080
-```
-
-Публичный HTTPS-URL `https://<random>.trycloudflare.com` — веб, API и Swagger.
-Для мобильного APK подставить этот URL в `API_BASE_URL` и собрать (см.
-[`docs/demo-deploy.md`](docs/demo-deploy.md)).
-
-> Веб-клиент собирается на хосте (`npm run build`) — внутри Docker npm-install
-> падал по памяти/сети. Меняешь веб — пересобери `dist` и
+> Измёнен веб — пересобрать `dist` (`npm run build`) и
 > `docker compose up -d --build web`.
 
----
 
 ## API
 
