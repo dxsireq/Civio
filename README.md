@@ -194,14 +194,37 @@ docker compose ps
 | `employee@civio.test` | OrganizationEmployee | Сотрудник org1 (парикмахер) |
 | `employee2@civio.test` | OrganizationEmployee | Сотрудник org1 (мастер маникюра) |
 | `employee3@civio.test` | OrganizationEmployee | Сотрудник org2 (барбер) |
-| `client@civio.test` | Citizen | Записи в org1 и org2: created, confirmed, cancelled |
-| `client2@civio.test` | Citizen | Записи в org1 и org2: completed, rejected |
+| `client@civio.test` | Citizen | Записи в нескольких организациях |
+| `client2@civio.test` | Citizen | Записи в нескольких организациях |
 | `client3@civio.test` | Citizen | Нет записей |
-| `client4@civio.test` | Citizen | Записи в org1 и org2: confirmed, completed |
-| `client5@civio.test` | Citizen | Записи в org1, org2, org8: created, confirmed |
-| `client6@civio.test` | Citizen | Записи в org1, org2, org8: confirmed, completed, rejected |
+| `client4@civio.test` | Citizen | Записи в нескольких организациях |
+| `client5@civio.test` | Citizen | Записи в нескольких организациях |
+| `client6@civio.test` | Citizen | Записи в нескольких организациях |
 
-Итого организаций: 3 на модерации (org3, org6, org7), 5 одобренных (org1, org2, org8, org9, org10), 2 отменённых (org4 отклонена, org5 заблокирована). У каждой — минимум 2 сотрудника и 2 услуги с привязкой услуг к сотрудникам. Записей 17, каждый статус представлен.
+### Сотрудники с подтверждёнными аккаунтами (роль OrganizationEmployee)
+
+У каждой организации минимум 2 сотрудника с подтверждённым аккаунтом — могут войти на платформу (логин = email сотрудника, пароль `Test1234!`), имеют назначенные услуги, дни работы и записи.
+
+| Организация | Логины сотрудников |
+|-------------|--------------------|
+| org1 «Студия красоты Civio» | `employee@civio.test` (парикмахер), `employee2@civio.test` (мастер маникюра) |
+| org2 «Барбершоп Civio» | `employee3@civio.test`, `t.nazarov@civio.test` (барберы) |
+| org3 «Маникюрный салон» | `s.krylova@civio.test`, `v.tikhonova@civio.test` (мастера маникюра) |
+| org4 «Спа-салон» | `p.safonov@civio.test` (массажист), `d.melnikova@civio.test` (косметолог) |
+| org5 «Студия Blocked» | `k.bogdanov@civio.test`, `l.vlasova@civio.test` (парикмахеры) |
+| org6 «Тату-студия InkArt» | `g.zhukov@civio.test`, `n.polyakova@civio.test` (тату-мастера) |
+| org7 «Фотостудия Кадр» | `m.solovyov@civio.test`, `a.kovaleva@civio.test` (фотографы) |
+| org8 «Фитнес-студия Тонус» | `m.volkov@civio.test` (тренер), `n.kiseleva@civio.test` (массажист), `a.gusev@civio.test` (тренер) |
+| org9 «Автосервис Мотор» | `o.titov@civio.test`, `d.ershov@civio.test` (механики) |
+| org10 «Стоматология Дента» | `a.markova@civio.test` (стоматолог), `y.klimova@civio.test` (гигиенист) |
+
+### Неподтверждённые сотрудники org1 (приглашение ожидает принятия)
+
+Аккаунта нет, войти нельзя — приглашение в статусе `pending` («Ожидает принятия»):
+
+`t.orlova@civio.test` (администратор), `p.zaytsev@civio.test` (стилист), `i.belyaeva@civio.test` (косметолог).
+
+Итого организаций: 3 на модерации (org3, org6, org7), 5 одобренных (org1, org2, org8, org9, org10), 2 отменённых (org4 отклонена, org5 заблокирована). У каждой — минимум 2 сотрудника с подтверждённым аккаунтом, услуги с привязкой к сотрудникам и **минимум 10 записей**, покрывающих все статусы (created, confirmed, completed, cancelled, rejected).
 
 ---
 

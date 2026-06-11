@@ -1700,3 +1700,209 @@ INSERT INTO booking_qr_codes (id, booking_id, token, expires_at, used_at, create
         'QR_TOKEN_ORG8_TRAINING_CONFIRMED_FAKE_BASE64URL_IIIIIIIIIIIIIIIIIII',
         '2026-06-25 14:00:00+00', NULL, NOW())
 ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================
+-- EXTENDED SEED 4 — loginable staff + ≥10 bookings for EVERY org
+-- Goal:
+--   * Every organization gets ≥2 employees with CONFIRMED accounts
+--     (employees.user_id set + accepted employee_invitations row +
+--      Citizen/OrganizationEmployee roles) — they can log in.
+--   * Login = employee email (e.g. s.krylova@civio.test) / Test1234!
+--   * org1 keeps UNCONFIRMED staff (Татьяна Орлова, Павел Зайцев,
+--     Ирина Беляева) as PENDING invitations — "Ожидает принятия".
+--   * Every organization gets ≥10 bookings tied to its confirmed staff,
+--     mixing all statuses (created/confirmed/completed/cancelled/rejected).
+--
+-- Generation is set-based + procedural with deterministic UUID prefixes
+-- (re-run safe via ON CONFLICT / NOT EXISTS):
+--   users (promoted)     23000000-...
+--   employee_invitations 24000000-...
+--   bookings             20000000-...
+--   work_days            21000000-...
+--   booking_slots        22000000-...
+--   booking_qr_codes     25000000-...
+-- Booking dates: 2026-04-13 (past → completed), 2026-06-26 / 06-29 /
+--   07-02 / 07-03 (future).
+-- =============================================================
+
+-- -------------------------------------------------------------
+-- Part A — give every employee without an account a loginable user
+--   (excludes org1's 3 staff that stay PENDING: t.orlova / p.zaytsev /
+--    i.belyaeva). Login email = employee email.
+-- -------------------------------------------------------------
+WITH to_promote AS (
+    SELECT e.id, e.email, e.first_name, e.last_name, e.phone,
+           row_number() OVER (ORDER BY e.created_at, e.id) AS rn
+    FROM employees e
+    WHERE e.user_id IS NULL
+      AND e.email IS NOT NULL
+      AND e.email NOT IN ('t.orlova@civio.test', 'p.zaytsev@civio.test', 'i.belyaeva@civio.test')
+)
+INSERT INTO users (id, email, password_hash, first_name, last_name, phone, is_active, is_email_verified, created_at)
+SELECT ('23000000-0000-0000-0000-' || lpad(to_hex(rn), 12, '0'))::uuid,
+       email,
+       'AQAAAAIAAYagAAAAEDt1Xws6yspZSSkQsSzNAmRgGDoELZZVrTpIpt9M+0B9L+phIHPuG2viLxgzC+GEgA==',
+       first_name, last_name, phone, true, true, NOW()
+FROM to_promote
+ON CONFLICT (email) DO NOTHING;
+
+-- Link employees to their freshly created users (by shared email)
+UPDATE employees e
+SET user_id = u.id, is_active = true
+FROM users u
+WHERE e.user_id IS NULL
+  AND e.email = u.email;
+
+-- Roles for every confirmed employee (Citizen + OrganizationEmployee)
+INSERT INTO user_roles (user_id, role_id)
+SELECT DISTINCT e.user_id, r.id
+FROM employees e
+CROSS JOIN roles r
+WHERE e.user_id IS NOT NULL
+  AND r.name IN ('Citizen', 'OrganizationEmployee')
+ON CONFLICT DO NOTHING;
+
+-- Accepted invitations for every confirmed employee lacking one
+INSERT INTO employee_invitations (id, employee_id, organization_id, email, token, status, invited_by, created_at, expires_at, accepted_at)
+SELECT ('24000000-0000-0000-0000-' || lpad(to_hex(row_number() OVER (ORDER BY e.id)), 12, '0'))::uuid,
+       e.id, e.organization_id, COALESCE(e.email, ''),
+       'ACCEPTED_TOKEN_' || replace(e.id::text, '-', ''),
+       'accepted', o.owner_user_id,
+       NOW() - INTERVAL '10 days', NOW() + INTERVAL '20 days', NOW() - INTERVAL '9 days'
+FROM employees e
+JOIN organizations o ON o.id = e.organization_id
+WHERE e.user_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM employee_invitations i WHERE i.employee_id = e.id)
+ON CONFLICT DO NOTHING;
+
+-- Pending invitations for org1's unconfirmed staff ("Ожидает принятия")
+INSERT INTO employee_invitations (id, employee_id, organization_id, email, token, status, invited_by, created_at, expires_at, accepted_at)
+SELECT ('24000000-0000-0000-0000-' || lpad(to_hex(4000 + row_number() OVER (ORDER BY e.id)), 12, '0'))::uuid,
+       e.id, e.organization_id, e.email,
+       'PENDING_TOKEN_' || replace(e.id::text, '-', ''),
+       'pending', o.owner_user_id,
+       NOW() - INTERVAL '2 days', NOW() + INTERVAL '5 days', NULL
+FROM employees e
+JOIN organizations o ON o.id = e.organization_id
+WHERE e.user_id IS NULL
+  AND e.email IN ('t.orlova@civio.test', 'p.zaytsev@civio.test', 'i.belyaeva@civio.test')
+  AND NOT EXISTS (SELECT 1 FROM employee_invitations i WHERE i.employee_id = e.id)
+ON CONFLICT DO NOTHING;
+
+-- Schedule templates (Mon–Fri 09:00–18:00) for confirmed employees lacking one
+INSERT INTO schedule_templates (employee_id, day_of_week, start_time, end_time, is_active)
+SELECT e.id, d, '09:00'::time, '18:00'::time, true
+FROM employees e
+CROSS JOIN generate_series(1, 5) AS d
+WHERE e.user_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM schedule_templates st WHERE st.employee_id = e.id)
+ON CONFLICT DO NOTHING;
+
+-- -------------------------------------------------------------
+-- Part B/C — ≥10 bookings per org across all confirmed employees
+--   5 bookings per confirmed employee, one per fixed date, mixed status.
+-- -------------------------------------------------------------
+DO $seed4_bookings$
+DECLARE
+    citizens uuid[] := ARRAY[
+        'a0000000-0000-0000-0000-000000000003',
+        'a0000000-0000-0000-0000-00000000000a',
+        'a0000000-0000-0000-0000-00000000000b',
+        'a0000000-0000-0000-0000-00000000000c',
+        'a0000000-0000-0000-0000-00000000000d',
+        'a0000000-0000-0000-0000-00000000000e'
+    ]::uuid[];
+    dates    date[] := ARRAY['2026-04-13', '2026-06-26', '2026-06-29', '2026-07-02', '2026-07-03']::date[];
+    hours    int[]  := ARRAY[10, 11, 12, 14, 15];
+    statuses text[] := ARRAY['completed', 'confirmed', 'created', 'confirmed', 'cancelled'];
+    rec       record;
+    cnt       int := 0;
+    i         int;
+    v_date    date;
+    v_start   timestamptz;
+    v_end     timestamptz;
+    v_status  text;
+    v_citizen uuid;
+    v_wd uuid; v_slot uuid; v_book uuid; v_qr uuid; v_status_id uuid;
+    s_booked    uuid;
+    bs_created  uuid; bs_confirmed uuid; bs_completed uuid; bs_cancelled uuid; bs_rejected uuid;
+BEGIN
+    SELECT id INTO s_booked     FROM slot_statuses    WHERE code = 'booked';
+    SELECT id INTO bs_created   FROM booking_statuses WHERE code = 'created';
+    SELECT id INTO bs_confirmed FROM booking_statuses WHERE code = 'confirmed';
+    SELECT id INTO bs_completed FROM booking_statuses WHERE code = 'completed';
+    SELECT id INTO bs_cancelled FROM booking_statuses WHERE code = 'cancelled';
+    SELECT id INTO bs_rejected  FROM booking_statuses WHERE code = 'rejected';
+
+    FOR rec IN
+        SELECT e.id AS employee_id, e.organization_id, o.owner_user_id,
+               (SELECT es.service_id FROM employee_services es WHERE es.employee_id = e.id LIMIT 1) AS service_id,
+               row_number() OVER (PARTITION BY e.organization_id ORDER BY e.created_at, e.id) AS emp_rank
+        FROM employees e
+        JOIN organizations o ON o.id = e.organization_id
+        WHERE e.user_id IS NOT NULL AND e.is_active
+          AND EXISTS (SELECT 1 FROM employee_services es WHERE es.employee_id = e.id)
+    LOOP
+        FOR i IN 1..5 LOOP
+            cnt := cnt + 1;
+            v_date  := dates[i];
+            v_start := (v_date::text || ' ' || lpad(hours[i]::text, 2, '0') || ':00:00+00')::timestamptz;
+            v_end   := v_start + INTERVAL '1 hour';
+            v_status := statuses[i];
+            -- second master in each org closes with a REJECTED booking for full coverage
+            IF rec.emp_rank = 2 AND i = 5 THEN
+                v_status := 'rejected';
+            END IF;
+            v_citizen := citizens[1 + (cnt % 6)];
+
+            v_wd   := ('21000000-0000-0000-0000-' || lpad(to_hex(cnt), 12, '0'))::uuid;
+            v_slot := ('22000000-0000-0000-0000-' || lpad(to_hex(cnt), 12, '0'))::uuid;
+            v_book := ('20000000-0000-0000-0000-' || lpad(to_hex(cnt), 12, '0'))::uuid;
+            v_qr   := ('25000000-0000-0000-0000-' || lpad(to_hex(cnt), 12, '0'))::uuid;
+
+            v_status_id := CASE v_status
+                WHEN 'created'   THEN bs_created
+                WHEN 'confirmed' THEN bs_confirmed
+                WHEN 'completed' THEN bs_completed
+                WHEN 'cancelled' THEN bs_cancelled
+                WHEN 'rejected'  THEN bs_rejected
+            END;
+
+            INSERT INTO work_days (id, employee_id, work_date, start_time, end_time, is_working, created_at)
+            VALUES (v_wd, rec.employee_id, v_date, '09:00', '19:00', true, NOW())
+            ON CONFLICT (employee_id, work_date) DO NOTHING;
+
+            INSERT INTO booking_slots (id, employee_id, service_id, work_day_id, status_id, start_at, end_at, created_at)
+            VALUES (v_slot, rec.employee_id, rec.service_id, v_wd, s_booked, v_start, v_end, NOW())
+            ON CONFLICT (employee_id, start_at, end_at) DO NOTHING;
+
+            INSERT INTO bookings (id, citizen_id, organization_id, employee_id, service_id, slot_id, status_id, comment, created_at, updated_at)
+            VALUES (v_book, v_citizen, rec.organization_id, rec.employee_id, rec.service_id, v_slot, v_status_id,
+                    CASE WHEN v_status = 'created' THEN 'Прошу подтвердить' ELSE NULL END,
+                    NOW(), CASE WHEN v_status = 'created' THEN NULL ELSE NOW() END)
+            ON CONFLICT (id) DO NOTHING;
+
+            IF v_status = 'completed' THEN
+                INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+                    (v_book, bs_created,   bs_confirmed, rec.owner_user_id, NULL),
+                    (v_book, bs_confirmed, bs_completed, rec.owner_user_id, 'QR проверен');
+                INSERT INTO booking_qr_codes (id, booking_id, token, expires_at, used_at, created_at)
+                VALUES (v_qr, v_book, 'QR_SEED4_' || lpad(to_hex(cnt), 12, '0') || '_USED', v_end, v_start + INTERVAL '50 minutes', NOW())
+                ON CONFLICT (id) DO NOTHING;
+            ELSIF v_status = 'confirmed' THEN
+                INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+                    (v_book, bs_created, bs_confirmed, rec.owner_user_id, NULL);
+                INSERT INTO booking_qr_codes (id, booking_id, token, expires_at, used_at, created_at)
+                VALUES (v_qr, v_book, 'QR_SEED4_' || lpad(to_hex(cnt), 12, '0') || '_UNUSED', v_end, NULL, NOW())
+                ON CONFLICT (id) DO NOTHING;
+            ELSIF v_status = 'cancelled' THEN
+                INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+                    (v_book, bs_created, bs_cancelled, v_citizen, 'Отмена клиентом');
+            ELSIF v_status = 'rejected' THEN
+                INSERT INTO booking_status_history (booking_id, old_status_id, new_status_id, changed_by_id, comment) VALUES
+                    (v_book, bs_created, bs_rejected, rec.owner_user_id, 'Отклонено организацией');
+            END IF;
+        END LOOP;
+    END LOOP;
+END
+$seed4_bookings$;
