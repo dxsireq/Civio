@@ -195,14 +195,7 @@ export function OrgDashboardPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 14,
-            marginBottom: 22,
-          }}
-        >
+        <div className="grid-stats" style={{ marginBottom: 22 }}>
           <StatCard label="Сотрудников" value={stats.employees} />
           <StatCard label="Активных услуг" value={stats.services} />
           <StatCard
@@ -215,14 +208,7 @@ export function OrgDashboardPage() {
           />
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0,1fr) 380px',
-            gap: 18,
-            alignItems: 'start',
-          }}
-        >
+        <div className="dash-split">
           <div className="card">
             <div className="card-header">
               <h2 className="card-title">Информация об организации</h2>

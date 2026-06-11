@@ -183,7 +183,7 @@ export function BookingsPage() {
               background: 'var(--bg-soft)',
             }}
           >
-            <div style={{ position: 'relative', width: 280 }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: 280 }}>
               <Search
                 size={14}
                 style={{
@@ -215,7 +215,7 @@ export function BookingsPage() {
               Нет бронирований по выбранному фильтру
             </div>
           ) : (
-            <table className="table">
+            <table className="table table-cards">
               <thead>
                 <tr>
                   <th>Услуга</th>
@@ -234,19 +234,22 @@ export function BookingsPage() {
                     }
                     style={{ cursor: 'pointer' }}
                   >
-                    <td style={{ fontWeight: 500 }}>{b.serviceName}</td>
-                    <td className="cell-muted">
+                    <td data-label="Услуга" style={{ fontWeight: 500 }}>
+                      {b.serviceName}
+                    </td>
+                    <td data-label="Сотрудник" className="cell-muted">
                       {b.employeeFirstName
                         ? `${b.employeeFirstName} ${b.employeeLastName ?? ''}`.trim()
                         : '—'}
                     </td>
                     <td
+                      data-label="Дата и время"
                       className="cell-muted"
                       style={{ fontVariantNumeric: 'tabular-nums' }}
                     >
                       {formatDateTime(b.startAt)}
                     </td>
-                    <td>
+                    <td data-label="Статус">
                       <span className={BOOKING_STATUS_BADGE[b.statusCode]}>
                         <span className="badge-dot" />
                         {BOOKING_STATUS_LABEL[b.statusCode]}

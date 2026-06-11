@@ -114,7 +114,7 @@ export function EmployeeDashboardPage() {
             </div>
           ) : (
             <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
-              <table className="table">
+              <table className="table table-cards">
                 <thead>
                   <tr>
                     <th>Услуга</th>
@@ -125,9 +125,9 @@ export function EmployeeDashboardPage() {
                 <tbody>
                   {services.map((s) => (
                     <tr key={s.id}>
-                      <td style={{ fontWeight: 500 }}>{s.name}</td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{s.durationMinutes} мин</td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>
+                      <td data-label="Услуга" style={{ fontWeight: 500 }}>{s.name}</td>
+                      <td data-label="Длительность" style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{s.durationMinutes} мин</td>
+                      <td data-label="Цена" style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>
                         {s.price !== null ? `${Number(s.price).toLocaleString('ru-RU')} ₽` : '—'}
                       </td>
                     </tr>

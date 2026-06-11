@@ -155,7 +155,7 @@ export function EmployeeBookingsPage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="table">
+              <table className="table table-cards">
                 <thead>
                   <tr>
                     <th>Дата и время</th>
@@ -173,15 +173,15 @@ export function EmployeeBookingsPage() {
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/employee/${orgId}/bookings/${b.id}`)}
                     >
-                      <td style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{formatDateTime(b.startAt)}</td>
-                      <td>{b.serviceName}</td>
-                      <td>
+                      <td data-label="Дата и время" style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>{formatDateTime(b.startAt)}</td>
+                      <td data-label="Услуга">{b.serviceName}</td>
+                      <td data-label="Статус">
                         <span className={BOOKING_STATUS_BADGE[b.statusCode]}>
                           <span className="badge-dot" />
                           {BOOKING_STATUS_LABEL[b.statusCode]}
                         </span>
                       </td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td className="cell-actions" onClick={(e) => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6 }}>
                           {b.statusCode === 'created' && (
                             <>
@@ -216,7 +216,7 @@ export function EmployeeBookingsPage() {
                           )}
                         </div>
                       </td>
-                      <td>
+                      <td className="cell-chevron">
                         <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
                       </td>
                     </tr>

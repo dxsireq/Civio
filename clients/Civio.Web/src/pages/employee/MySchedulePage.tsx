@@ -56,7 +56,7 @@ export function MySchedulePage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table className="table">
+              <table className="table table-cards">
                 <thead>
                   <tr>
                     <th>Дата</th>
@@ -69,11 +69,11 @@ export function MySchedulePage() {
                 <tbody>
                   {days.map((d) => (
                     <tr key={d.id}>
-                      <td style={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{formatDate(d.workDate)}</td>
-                      <td style={{ color: 'var(--text-soft)' }}>{formatDay(d.workDate)}</td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{d.startTime.slice(0, 5)}</td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{d.endTime.slice(0, 5)}</td>
-                      <td style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>
+                      <td data-label="Дата" style={{ fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{formatDate(d.workDate)}</td>
+                      <td data-label="День" style={{ color: 'var(--text-soft)' }}>{formatDay(d.workDate)}</td>
+                      <td data-label="Начало" style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{d.startTime.slice(0, 5)}</td>
+                      <td data-label="Конец" style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>{d.endTime.slice(0, 5)}</td>
+                      <td data-label="Перерыв" style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-soft)' }}>
                         {d.breakStart && d.breakEnd ? `${d.breakStart.slice(0, 5)}–${d.breakEnd.slice(0, 5)}` : '—'}
                       </td>
                     </tr>

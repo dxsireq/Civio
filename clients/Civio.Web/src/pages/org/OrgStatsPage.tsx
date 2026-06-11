@@ -135,14 +135,7 @@ export function OrgStatsPage() {
       </div>
 
       {/* Lifetime totals */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: 14,
-          marginBottom: 24,
-        }}
-      >
+      <div className="grid-stats" style={{ marginBottom: 24 }}>
         <StatCard label="Общая выручка" value={t ? formatRub(t.totalRevenue) : null} />
         <StatCard label="Оказано услуг" value={t?.completedCount ?? null} />
         <StatCard label="Всего записей" value={t?.totalBookings ?? null} />
@@ -290,13 +283,7 @@ export function OrgStatsPage() {
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 18,
-            }}
-          >
+          <div className="grid-2" style={{ gap: 18 }}>
             {/* Revenue by service */}
             <div className="card">
               <div className="card-header">

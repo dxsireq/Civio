@@ -179,7 +179,7 @@ export function ServicesPage() {
           </div>
         ) : (
           <div className="card" style={{ padding: 0 }}>
-            <table className="table">
+            <table className="table table-cards">
               <thead>
                 <tr>
                   <th>Название</th>
@@ -192,7 +192,7 @@ export function ServicesPage() {
               <tbody>
                 {services.map((s) => (
                   <tr key={s.id} style={{ opacity: s.isActive ? 1 : 0.55 }}>
-                    <td>
+                    <td data-label="Название">
                       <div style={{ fontWeight: 500 }}>{s.name}</div>
                       {s.description && (
                         <div
@@ -210,12 +210,14 @@ export function ServicesPage() {
                       )}
                     </td>
                     <td
+                      data-label="Длительность"
                       className="cell-muted"
                       style={{ fontVariantNumeric: 'tabular-nums' }}
                     >
                       {s.durationMinutes} мин
                     </td>
                     <td
+                      data-label="Цена"
                       style={{
                         fontWeight: 600,
                         fontVariantNumeric: 'tabular-nums',
@@ -225,7 +227,7 @@ export function ServicesPage() {
                         ? '—'
                         : `${s.price.toLocaleString('ru-RU')} ₽`}
                     </td>
-                    <td>
+                    <td data-label="Статус">
                       {s.isActive ? (
                         <span className="badge badge-approved">
                           <span className="badge-dot" />
@@ -274,11 +276,7 @@ export function ServicesPage() {
             className="drawer"
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: 420,
-              background: 'white',
-              height: '100%',
               padding: 24,
-              overflow: 'auto',
             }}
           >
             <div

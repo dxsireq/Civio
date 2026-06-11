@@ -164,7 +164,7 @@ export function EmployeesPage() {
           </div>
         ) : (
           <div className="card" style={{ padding: 0 }}>
-            <table className="table">
+            <table className="table table-cards">
               <thead>
                 <tr>
                   <th>Сотрудник</th>
@@ -183,7 +183,7 @@ export function EmployeesPage() {
                     }
                     style={{ cursor: 'pointer' }}
                   >
-                    <td>
+                    <td data-label="Сотрудник">
                       <div
                         style={{
                           display: 'flex',
@@ -203,8 +203,8 @@ export function EmployeesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="cell-muted">{e.position ?? '—'}</td>
-                    <td>
+                    <td data-label="Должность" className="cell-muted">{e.position ?? '—'}</td>
+                    <td data-label="Контакты">
                       <div style={{ fontSize: 13 }}>{e.email ?? '—'}</div>
                       <div
                         style={{
@@ -216,7 +216,7 @@ export function EmployeesPage() {
                         {e.phone ?? '—'}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Статус">
                       <span className={EMPLOYEE_STATUS_BADGE[e.membershipStatus]}>
                         <span className="badge-dot" />
                         {EMPLOYEE_STATUS_LABEL[e.membershipStatus]}
@@ -255,11 +255,7 @@ export function EmployeesPage() {
             className="drawer"
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: 420,
-              background: 'white',
-              height: '100%',
               padding: 24,
-              overflow: 'auto',
             }}
           >
             <div

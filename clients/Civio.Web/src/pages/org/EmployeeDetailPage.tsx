@@ -359,13 +359,7 @@ function DataTab({ employee, orgId, empId, onSaved }: DataTabProps) {
 
   return (
     <div style={{ padding: 24, maxWidth: 720 }}>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 16,
-        }}
-      >
+      <div className="grid-2" style={{ gap: 16 }}>
         <Field
           label="Имя"
           value={form.firstName}
@@ -535,7 +529,7 @@ function ServicesTab({ orgId, empId }: { orgId: string; empId: string }) {
           overflow: 'hidden',
         }}
       >
-        <table className="table">
+        <table className="table table-cards">
           <thead>
             <tr>
               <th>Услуга</th>
@@ -560,14 +554,16 @@ function ServicesTab({ orgId, empId }: { orgId: string; empId: string }) {
             ) : (
               assigned.map((s) => (
                 <tr key={s.id}>
-                  <td style={{ fontWeight: 500 }}>{s.name}</td>
+                  <td data-label="Услуга" style={{ fontWeight: 500 }}>{s.name}</td>
                   <td
+                    data-label="Длительность"
                     className="cell-muted"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
                     {s.durationMinutes} мин
                   </td>
                   <td
+                    data-label="Цена"
                     className="cell-muted"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
@@ -789,14 +785,7 @@ function DaysTab({ empId }: { empId: string }) {
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr) auto',
-            gap: 8,
-            alignItems: 'end',
-          }}
-        >
+        <div className="grid-form-row">
           <div className="field">
             <label className="field-label">Начало</label>
             <input
@@ -871,7 +860,7 @@ function DaysTab({ empId }: { empId: string }) {
           overflow: 'hidden',
         }}
       >
-        <table className="table">
+        <table className="table table-cards">
           <thead>
             <tr>
               <th>Дата</th>
@@ -898,6 +887,7 @@ function DaysTab({ empId }: { empId: string }) {
               days.map((d) => (
                 <tr key={d.id}>
                   <td
+                    data-label="Дата"
                     style={{
                       fontWeight: 500,
                       fontVariantNumeric: 'tabular-nums',
@@ -906,18 +896,21 @@ function DaysTab({ empId }: { empId: string }) {
                     {d.workDate}
                   </td>
                   <td
+                    data-label="Начало"
                     className="cell-muted"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
                     {d.startTime}
                   </td>
                   <td
+                    data-label="Конец"
                     className="cell-muted"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
                     {d.endTime}
                   </td>
                   <td
+                    data-label="Перерыв"
                     className="cell-muted"
                     style={{ fontVariantNumeric: 'tabular-nums' }}
                   >
