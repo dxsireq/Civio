@@ -5,11 +5,11 @@ import { getWorkDays, type WorkDay } from '../../api/workDays'
 import { getErrorMessage } from '../../api/client'
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' })
 }
 
 function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString('ru-RU', { weekday: 'short' })
+  return new Date(iso).toLocaleDateString('ru-RU', { weekday: 'short', timeZone: 'UTC' })
 }
 
 export function MySchedulePage() {

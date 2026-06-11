@@ -613,7 +613,12 @@ function generateDates(selectedDays: number[], untilDate: string): string[] {
   while (cur <= until) {
     const iso = cur.getDay() === 0 ? 7 : cur.getDay()
     if (selectedDays.includes(iso)) {
-      result.push(cur.toISOString().slice(0, 10))
+      // Format from local parts — toISOString() shifts to UTC and can roll the
+      // weekday back a day in positive-offset timezones (Mon -> Sun).
+      const y = cur.getFullYear()
+      const m = String(cur.getMonth() + 1).padStart(2, '0')
+      const day = String(cur.getDate()).padStart(2, '0')
+      result.push(`${y}-${m}-${day}`)
     }
     cur.setDate(cur.getDate() + 1)
   }

@@ -23,9 +23,10 @@ function formatRange(startIso: string, endIso: string): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   })
   const fmt = (d: Date) =>
-    d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
   return `${date} · ${fmt(start)} – ${fmt(end)}`
 }
 

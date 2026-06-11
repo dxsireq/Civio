@@ -34,12 +34,14 @@ function formatWhen(iso: string): string {
   if (Number.isNaN(d.getTime())) return iso
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  // startAt is wall-clock time stored at UTC offset zero — read UTC parts.
+  const target = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
   const dayMs = 86_400_000
   const diff = Math.round((target.getTime() - today.getTime()) / dayMs)
   const time = d.toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC',
   })
   let day: string
   if (diff === 0) day = 'сегодня'
@@ -49,6 +51,7 @@ function formatWhen(iso: string): string {
     day = d.toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
+      timeZone: 'UTC',
     })
   return `${day} · ${time}`
 }
@@ -57,9 +60,9 @@ function isToday(iso: string): boolean {
   const d = new Date(iso)
   const now = new Date()
   return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
+    d.getUTCFullYear() === now.getFullYear() &&
+    d.getUTCMonth() === now.getMonth() &&
+    d.getUTCDate() === now.getDate()
   )
 }
 
