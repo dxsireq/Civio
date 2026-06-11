@@ -201,16 +201,26 @@ cloudflared tunnel --url http://localhost:8080
 | Email | Роль | Описание |
 |-------|------|----------|
 | `admin@civio.test` | PlatformAdmin | Администратор платформы |
-| `owner@civio.test` | OrganizationOwner | Владелец org1 и org2 (approved) |
-| `owner2@civio.test` | OrganizationOwner | Владелец org3 (на модерации) |
-| `owner3@civio.test` | OrganizationOwner | Владелец org4 (отклонён) |
-| `owner4@civio.test` | OrganizationOwner | Владелец org5 (заблокирован) |
-| `employee@civio.test` | OrganizationEmployee | Сотрудник org1 |
-| `employee2@civio.test` | OrganizationEmployee | Без привязки к организации |
-| `employee3@civio.test` | OrganizationEmployee | Сотрудник org2 |
-| `client@civio.test` | Citizen | Записи: created, confirmed, cancelled |
-| `client2@civio.test` | Citizen | Записи: completed, rejected |
+| `owner@civio.test` | OrganizationOwner | Владелец org1 «Студия красоты Civio» и org2 «Барбершоп Civio» (approved) |
+| `owner2@civio.test` | OrganizationOwner | Владелец org3 «Маникюрный салон Pending» (на модерации) |
+| `owner3@civio.test` | OrganizationOwner | Владелец org4 «Спа-салон Rejected» (отклонена) |
+| `owner4@civio.test` | OrganizationOwner | Владелец org5 «Студия Blocked» (заблокирована) |
+| `owner5@civio.test` | OrganizationOwner | Владелец org6 «Тату-студия InkArt» (на модерации) |
+| `owner6@civio.test` | OrganizationOwner | Владелец org7 «Фотостудия Кадр» (на модерации) |
+| `owner7@civio.test` | OrganizationOwner | Владелец org8 «Фитнес-студия Тонус» (approved) |
+| `owner8@civio.test` | OrganizationOwner | Владелец org9 «Автосервис Мотор» (approved) |
+| `owner9@civio.test` | OrganizationOwner | Владелец org10 «Стоматология Дента» (approved) |
+| `employee@civio.test` | OrganizationEmployee | Сотрудник org1 (парикмахер) |
+| `employee2@civio.test` | OrganizationEmployee | Сотрудник org1 (мастер маникюра) |
+| `employee3@civio.test` | OrganizationEmployee | Сотрудник org2 (барбер) |
+| `client@civio.test` | Citizen | Записи в org1 и org2: created, confirmed, cancelled |
+| `client2@civio.test` | Citizen | Записи в org1 и org2: completed, rejected |
 | `client3@civio.test` | Citizen | Нет записей |
+| `client4@civio.test` | Citizen | Записи в org1 и org2: confirmed, completed |
+| `client5@civio.test` | Citizen | Записи в org1, org2, org8: created, confirmed |
+| `client6@civio.test` | Citizen | Записи в org1, org2, org8: confirmed, completed, rejected |
+
+Итого организаций: 3 на модерации (org3, org6, org7), 5 одобренных (org1, org2, org8, org9, org10), 2 отменённых (org4 отклонена, org5 заблокирована). У каждой — минимум 2 сотрудника и 2 услуги с привязкой услуг к сотрудникам. Записей 17, каждый статус представлен.
 
 ---
 
