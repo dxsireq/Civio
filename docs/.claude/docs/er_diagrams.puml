@@ -105,6 +105,7 @@ entity "users" as users {
   last_name : VARCHAR(100)
   middle_name : VARCHAR(100)
   is_active : BOOLEAN
+  is_email_verified :BOOLEAN
   created_at : TIMESTAMPTZ
   updated_at : TIMESTAMPTZ
 }
@@ -168,10 +169,22 @@ entity "device_push_tokens" as tokens {
   updated_at : TIMESTAMPTZ
 }
 
+entity email_verification_codes {
+* id : UUID <<PK>>
+--
+user_id : UUID <<FK>>
+code_hast : TEXT
+expires_at : TIMESTAMPTZ
+consumed_at : TIMESTAMPTZ
+attempts : INT
+created_at : TIMESTAMPTZ
+}
+
 users ||--o{ user_roles
 roles ||--o{ user_roles
 users ||--o{ notif
 users ||--o{ tokens
+users ||--o{ email_verification_codes
 ntypes ||--o{ notif
 nchannels ||--o{ notif
 nstatuses ||--o{ notif
@@ -181,7 +194,6 @@ nstatuses ||--o{ notif
 
 ' ============================================================
 ' Рисунок 5 – ER-Диаграмма: Управление организациями
-' (исправлено: убраны Филиал, Документ, справочники модерации)
 ' ============================================================
 @startuml fig5_organizations
 skinparam linetype ortho
@@ -231,6 +243,36 @@ entity "organization_moderation_history" as mod_history {
   created_at : TIMESTAMPTZ
 }
 
+entity "employees" as emp {
+  * id : UUID <<PK>>
+  --
+  organization_id : UUID <<FK>>
+  user_id : UUID <<FK>>
+  first_name : VARCHAR(100)
+  last_name : VARCHAR(100)
+  middle_name : VARCHAR(100)
+  position : VARCHAR(150)
+  phone : VARCHAR(30)
+  email : VARCHAR(255)
+  is_active : BOOLEAN
+  created_at : TIMESTAMPTZ
+  updated_at : TIMESTAMPTZ
+}
+
+entity "employee_invitations" as emp_inv {
+  * id : UUID <<PK>>
+  --
+  employee_id : UUID <<FK>>
+  organization_id : UUID <<FK>>
+  invited_by : UUID <<FK>>
+  email : VARCHAR(255)
+  token : TEXT
+  status : VARCHAR(20)
+  created_at : TIMESTAMPTZ
+  expires_at : TIMESTAMPTZ
+  accepted_at : TIMESTAMPTZ
+}
+
 entity "users" as users {
   * id : UUID <<PK>>
   --
@@ -246,12 +288,17 @@ users ||--o{ mod_history
 org_statuses ||--o{ mod_history
 org_statuses ||--o{ mod_history
 
+orgs ||--o{ emp
+users ||--o{ emp
+orgs ||--o{ emp_inv
+emp ||--o{ emp_inv
+users ||--o{ emp_inv
+
 @enduml
 
 
 ' ============================================================
 ' Рисунок 6 – ER-Диаграмма: Услуги
-' (исправлено: убрана связь сотрудника с филиалом)
 ' ============================================================
 @startuml fig6_services
 skinparam linetype ortho
