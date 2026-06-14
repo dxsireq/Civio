@@ -79,7 +79,6 @@ cp .env.example .env
 ### 2. База данных
 
 > Для локальной разработки поднимается **только** PostgreSQL.
-> Полный стек в Docker — см. раздел [«Демо-деплой»](#демо-деплой).
 
 ```bash
 docker compose up -d postgres
