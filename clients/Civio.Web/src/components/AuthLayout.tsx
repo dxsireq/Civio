@@ -5,6 +5,7 @@ export function AuthLayout() {
     <div
       className="civio"
       style={{
+        boxSizing: 'border-box',
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
