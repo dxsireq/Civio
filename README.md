@@ -66,7 +66,6 @@ Civio.sln
 - [Docker](https://docs.docker.com/get-docker/) + Docker Compose
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 - [Node.js](https://nodejs.org/) 20+
-- Android Studio (для мобильного клиента)
 
 ### 1. Клонирование и настройка
 
