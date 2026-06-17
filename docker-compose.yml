@@ -32,7 +32,8 @@ services:
       - .env   # Email__* SMTP creds (gitignored)
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ASPNETCORE_HTTP_PORTS: "5214"   # bind host :5214 (Caddy owns :8080)
+      # Loopback only: API reachable solely via Caddy (localhost:5214), never on the VPS public IP.
+      ASPNETCORE_URLS: "http://127.0.0.1:5214"
       ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=civio_system;Username=civio_user;Password=civio_password"
     depends_on:
       postgres:
@@ -54,8 +55,11 @@ services:
     # Avoids bridge<->host routing through the VPN tun.
     network_mode: host
     environment:
-      # Local dev: unset -> Caddyfile default :8080. Prod: set domain in .env for auto-TLS.
-      SITE_ADDRESS: ${SITE_ADDRESS:-}
+      # Local dev: unset -> :8080 (plain HTTP). Prod: set domain in .env for auto-TLS.
+      SITE_ADDRESS: ${SITE_ADDRESS:-:8080}
+      # Basic auth for /swagger*. Set SWAGGER_HASH in .env (bcrypt, see README/running.md).
+      SWAGGER_USER: ${SWAGGER_USER:-admin}
+      SWAGGER_HASH: ${SWAGGER_HASH:-$$2a$$14$$TEhJOpcVtxUhwvO3TQ6dbeuADVlBGFq/dd2VTL9h/81SxK21umATu}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data      # persists Let's Encrypt certs across restarts (avoid LE rate limit)

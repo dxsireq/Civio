@@ -3,16 +3,12 @@
 # Prod (VPS): SITE_ADDRESS=<domain> -> Caddy auto-provisions Let's Encrypt TLS on :443.
 # api runs host-net on :5214; web published on 127.0.0.1:8081. Glued via loopback.
 {$SITE_ADDRESS::8080} {
-	handle /api/* {
-		reverse_proxy localhost:5214
-	}
-	handle /swagger/* {
-		reverse_proxy localhost:5214
-	}
-	handle /openapi/* {
-		reverse_proxy localhost:5214
-	}
-	handle /health/* {
+	@api path /api/* /swagger /swagger/* /openapi /openapi/* /health /health/*
+	handle @api {
+		@swagger path /swagger /swagger/*
+		basic_auth @swagger {
+			{$SWAGGER_USER:admin} {$SWAGGER_HASH}
+		}
 		reverse_proxy localhost:5214
 	}
 	handle {
