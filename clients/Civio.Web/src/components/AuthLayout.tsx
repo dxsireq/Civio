@@ -6,7 +6,9 @@ export function AuthLayout() {
       className="civio"
       style={{
         boxSizing: 'border-box',
-        minHeight: '100vh',
+        // dvh tracks the visible viewport on mobile (excludes browser chrome),
+        // avoids the big top gap / clipped footer that 100vh causes
+        minHeight: '100dvh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
