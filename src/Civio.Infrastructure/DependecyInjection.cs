@@ -40,7 +40,10 @@ public static class DependencyInjection
         services.AddScoped<IActivityLogService, ActivityLogService>();
 
         services.Configure<EmailOptions>(configuration.GetSection("Email"));
-        services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.resend.com/");
+        });
         services.AddScoped<INotificationService, NotificationService>();
 
         services.Configure<AppOptions>(configuration.GetSection("App"));
