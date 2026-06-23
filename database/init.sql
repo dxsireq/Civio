@@ -1906,3 +1906,22 @@ BEGIN
     END LOOP;
 END
 $seed4_bookings$;
+
+-- =============================================================
+-- Spread booking created_at across the past three weeks (demo statistics)
+-- All seeds insert created_at = NOW(), which collapses the admin
+-- statistics charts into a single bar. Statistics group by created_at,
+-- so redistribute every booking evenly over the last 21 days (with an
+-- hour jitter) via deterministic round-robin ordering by id.
+-- updated_at stays NOW() (always >= the new created_at).
+-- =============================================================
+WITH ordered AS (
+    SELECT id, row_number() OVER (ORDER BY id) AS rn
+    FROM bookings
+)
+UPDATE bookings b
+SET created_at = NOW()
+               - (((o.rn - 1) % 21) || ' days')::interval
+               - (((o.rn * 7) % 24) || ' hours')::interval
+FROM ordered o
+WHERE b.id = o.id;
