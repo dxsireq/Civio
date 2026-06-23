@@ -603,6 +603,33 @@ const WEEKDAYS = [
   { iso: 7, label: 'Вс' },
 ]
 
+// Type ЧЧММ -> ЧЧ:ММ, inserting ':' after the 2nd digit automatically.
+function formatTimeInput(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 4)
+  return d.length <= 2 ? d : `${d.slice(0, 2)}:${d.slice(2)}`
+}
+
+// Type ддммгггг -> дд/мм/гггг, inserting '/' between groups automatically.
+function formatDateInput(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 8)
+  let r = d.slice(0, 2)
+  if (d.length > 2) r += '/' + d.slice(2, 4)
+  if (d.length > 4) r += '/' + d.slice(4, 8)
+  return r
+}
+
+// дд/мм/гггг -> гггг-мм-дд (ISO). Empty string if not a complete valid format.
+function ddmmyyyyToIso(s: string): string {
+  const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
+}
+
+// гггг-мм-дд -> дд/мм/гггг for display. Returns input unchanged if not ISO.
+function isoToDdmmyyyy(s: string): string {
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s
+}
+
 function generateDates(selectedDays: number[], untilDate: string): string[] {
   const result: string[] = []
   const today = new Date()
@@ -664,7 +691,12 @@ function DaysTab({ empId }: { empId: string }) {
       toast.error('Укажите дату окончания')
       return
     }
-    const until = new Date(form.untilDate)
+    const untilIso = ddmmyyyyToIso(form.untilDate)
+    if (!untilIso) {
+      toast.error('Дата окончания в формате дд/мм/гггг')
+      return
+    }
+    const until = new Date(untilIso)
     until.setHours(0, 0, 0, 0)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -676,7 +708,25 @@ function DaysTab({ empId }: { empId: string }) {
       toast.error('Заполните начало и конец рабочего дня')
       return
     }
-    const dates = generateDates(form.selectedDays, form.untilDate)
+    if (form.startTime >= form.endTime) {
+      toast.error('Начало рабочего дня должно быть раньше конца')
+      return
+    }
+    if (form.breakStart || form.breakEnd) {
+      if (!form.breakStart || !form.breakEnd) {
+        toast.error('Заполните оба поля перерыва')
+        return
+      }
+      if (form.breakStart >= form.breakEnd) {
+        toast.error('Начало перерыва должно быть раньше конца')
+        return
+      }
+      if (form.breakStart < form.startTime || form.breakEnd > form.endTime) {
+        toast.error('Перерыв должен быть в пределах рабочего времени')
+        return
+      }
+    }
+    const dates = generateDates(form.selectedDays, untilIso)
     if (dates.length === 0) {
       toast.error('Нет подходящих дат в указанном периоде')
       return
@@ -782,9 +832,14 @@ function DaysTab({ empId }: { empId: string }) {
             <label className="field-label">До даты</label>
             <input
               className="input"
-              type="date"
+              type="text"
+              inputMode="numeric"
+              placeholder="дд/мм/гггг"
+              maxLength={10}
               value={form.untilDate}
-              onChange={(e) => setForm({ ...form, untilDate: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, untilDate: formatDateInput(e.target.value) })
+              }
               style={{ width: 150 }}
             />
           </div>
@@ -799,9 +854,10 @@ function DaysTab({ empId }: { empId: string }) {
               placeholder="ЧЧ:ММ"
               pattern="[0-2][0-9]:[0-5][0-9]"
               maxLength={5}
+              inputMode="numeric"
               value={form.startTime}
               onChange={(e) =>
-                setForm({ ...form, startTime: e.target.value })
+                setForm({ ...form, startTime: formatTimeInput(e.target.value) })
               }
             />
           </div>
@@ -813,9 +869,10 @@ function DaysTab({ empId }: { empId: string }) {
               placeholder="ЧЧ:ММ"
               pattern="[0-2][0-9]:[0-5][0-9]"
               maxLength={5}
+              inputMode="numeric"
               value={form.endTime}
               onChange={(e) =>
-                setForm({ ...form, endTime: e.target.value })
+                setForm({ ...form, endTime: formatTimeInput(e.target.value) })
               }
             />
           </div>
@@ -827,9 +884,10 @@ function DaysTab({ empId }: { empId: string }) {
               placeholder="ЧЧ:ММ"
               pattern="[0-2][0-9]:[0-5][0-9]"
               maxLength={5}
+              inputMode="numeric"
               value={form.breakStart}
               onChange={(e) =>
-                setForm({ ...form, breakStart: e.target.value })
+                setForm({ ...form, breakStart: formatTimeInput(e.target.value) })
               }
             />
           </div>
@@ -841,9 +899,10 @@ function DaysTab({ empId }: { empId: string }) {
               placeholder="ЧЧ:ММ"
               pattern="[0-2][0-9]:[0-5][0-9]"
               maxLength={5}
+              inputMode="numeric"
               value={form.breakEnd}
               onChange={(e) =>
-                setForm({ ...form, breakEnd: e.target.value })
+                setForm({ ...form, breakEnd: formatTimeInput(e.target.value) })
               }
             />
           </div>
@@ -898,7 +957,7 @@ function DaysTab({ empId }: { empId: string }) {
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
-                    {d.workDate}
+                    {isoToDdmmyyyy(d.workDate)}
                   </td>
                   <td
                     data-label="Начало"
