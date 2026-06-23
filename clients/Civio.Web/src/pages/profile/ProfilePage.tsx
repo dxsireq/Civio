@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { AlertCircle, ArrowLeft } from 'lucide-react'
+import { AlertCircle, ArrowLeft, LogOut } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { changePassword, updateProfile } from '../../api/auth'
 import { getErrorMessage } from '../../api/client'
@@ -41,6 +41,12 @@ export function ProfilePage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const setUser = useAuthStore((s) => s.setUser)
+  const logout = useAuthStore((s) => s.logout)
+
+  const onLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   const [profileError, setProfileError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
@@ -145,6 +151,15 @@ export function ProfilePage() {
               Личные данные и параметры безопасности
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="btn btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            <LogOut size={15} />
+            Выйти
+          </button>
         </div>
 
         <form
