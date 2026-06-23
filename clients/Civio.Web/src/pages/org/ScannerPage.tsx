@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Check, ImageIcon, QrCode, RotateCw, X as XIcon } from 'lucide-react'
+import {
+  Camera,
+  Check,
+  Clipboard as ClipboardIcon,
+  ImageIcon,
+  QrCode,
+  RotateCw,
+  X as XIcon,
+} from 'lucide-react'
 import jsQR from 'jsqr'
 import {
   scanBookingQr,
@@ -137,14 +145,31 @@ export function ScannerPage() {
 
   useEffect(() => () => stop(), [])
 
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const blob = item.getAsFile()
+          if (blob) {
+            e.preventDefault()
+            void decodeBlob(blob)
+          }
+          return
+        }
+      }
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const restart = () => setState({ kind: 'scanning' })
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    e.target.value = ''
-
-    const url = URL.createObjectURL(file)
+  const decodeBlob = async (blob: Blob) => {
+    scannedRef.current = false
+    const url = URL.createObjectURL(blob)
     try {
       const img = new Image()
       await new Promise<void>((resolve, reject) => {
@@ -174,6 +199,47 @@ export function ScannerPage() {
       })
     } finally {
       URL.revokeObjectURL(url)
+    }
+  }
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    await decodeBlob(file)
+  }
+
+  const pasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.read) {
+        setState({
+          kind: 'error',
+          message:
+            'Браузер не поддерживает чтение буфера обмена. Скопируйте картинку и нажмите Ctrl+V, либо загрузите из файла.',
+        })
+        return
+      }
+      const items = await navigator.clipboard.read()
+      for (const item of items) {
+        const type = item.types.find((t) => t.startsWith('image/'))
+        if (type) {
+          const blob = await item.getType(type)
+          await decodeBlob(blob)
+          return
+        }
+      }
+      setState({
+        kind: 'error',
+        message: 'В буфере обмена нет изображения',
+      })
+    } catch (err) {
+      setState({
+        kind: 'error',
+        message:
+          err instanceof Error
+            ? `Не удалось прочитать буфер обмена: ${err.message}`
+            : 'Не удалось прочитать буфер обмена',
+      })
     }
   }
 
@@ -270,6 +336,14 @@ export function ScannerPage() {
                   <button
                     type="button"
                     className="btn btn-ghost"
+                    onClick={pasteFromClipboard}
+                  >
+                    <ClipboardIcon size={14} />
+                    Из буфера
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
                     onClick={() => setManualOpen(true)}
                   >
                     Ввести вручную
@@ -288,6 +362,7 @@ export function ScannerPage() {
               message={state.message}
               onAgain={restart}
               onFromFile={() => fileInputRef.current?.click()}
+              onFromClipboard={pasteFromClipboard}
             />
           )}
 
@@ -453,10 +528,12 @@ function ErrorCard({
   message,
   onAgain,
   onFromFile,
+  onFromClipboard,
 }: {
   message: string
   onAgain: () => void
   onFromFile?: () => void
+  onFromClipboard?: () => void
 }) {
   return (
     <div className="card" style={{ overflow: 'hidden' }}>
@@ -522,6 +599,16 @@ function ErrorCard({
           >
             <ImageIcon size={15} />
             Загрузить из файла
+          </button>
+        )}
+        {onFromClipboard && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={onFromClipboard}
+          >
+            <ClipboardIcon size={15} />
+            Вставить из буфера
           </button>
         )}
       </div>
