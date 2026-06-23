@@ -175,6 +175,11 @@ docker compose ps
 
 ## Тестовые аккаунты
 
+### Данные для Swagger
+
+Login: admin
+Password: civio-swagger-2026
+
 Все аккаунты используют пароль: `Test1234!`
 
 | Email | Роль | Описание |
