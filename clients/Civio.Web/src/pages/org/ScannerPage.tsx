@@ -312,6 +312,7 @@ export function ScannerPage() {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
+                  flexWrap: 'wrap',
                   marginTop: 16,
                   gap: 8,
                 }}
@@ -324,7 +325,7 @@ export function ScannerPage() {
                   <Camera size={14} />
                   Перезапустить
                 </button>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   <button
                     type="button"
                     className="btn btn-ghost"
